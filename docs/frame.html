@@ -683,7 +683,13 @@ later.</p>
             <div class="content"><div class='highlight'><pre>    __validateModel: <span class="keyword">function</span>(){
       <span class="keyword">if</span>(!<span class="keyword">this</span>.url) <span class="keyword">throw</span> <span class="string">"No URL specified for model"</span>;
     },
-  });</pre></div></div>
+  });
+
+  <span class="comment">/*
+   * Controllers
+   */</span>
+
+  <span class="keyword">var</span> ViewController = BasicObject.extend({</pre></div></div>
             
         </li>
         
@@ -694,12 +700,13 @@ later.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-34">&#182;</a>
               </div>
-              <p>Objects</p>
+              <p>The root view of this controller.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  Frame.BasicObject = BasicObject;
-  Frame.Model = Model;</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    view: <span class="literal">undefined</span>,
+
+    constructor: <span class="keyword">function</span>(attributes, options) {</pre></div></div>
             
         </li>
         
@@ -709,6 +716,162 @@ later.</p>
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>Call the basic object&#39;s constructor.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      BasicObject.call(<span class="keyword">this</span>, options);
+
+      <span class="keyword">if</span>(<span class="keyword">this</span>.initialize) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>Call the initialize method if it&#39;s present and pass in the options</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="keyword">this</span>.initialize.apply(<span class="keyword">this</span>, options);
+      }
+    },
+
+    loadView: <span class="keyword">function</span>() {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>Notify the inherited controller that the view is about to be loaded.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.viewWillLoad();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <p>Create a new View and pass it the el (el may be undefined)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.view = <span class="keyword">new</span> BasicObject({el: <span class="keyword">this</span>.el});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <p>Notify the inherited controller that the view has been loaded and is ready.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.viewDidLoad();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-40">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>Return the view so that who ever called this function can add the DOM Nodes.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">return</span> <span class="keyword">this</span>.view;
+    },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <p>Will be called when the view is done loading and is set up.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    viewDidLoad:  <span class="keyword">function</span>(){},</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <p>Will be called before any view loading is done.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    viewWillLoad: <span class="keyword">function</span>(){},
+  });
+
+  <span class="comment">/*
+   * Application class, root of the application stack.
+   */</span>
+  <span class="keyword">var</span> Application = BasicObject.extend({
+    didFinishLoading: <span class="keyword">function</span>() {
+      <span class="keyword">throw</span> Error(<span class="string">"didFinishLoading was not everwritten by subclass or Frame.Application was used directly as application class."</span>);
+    },
+    willTerminate: <span class="keyword">function</span>(){}
+  });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>Objects</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  Frame.BasicObject = BasicObject;
+  Frame.Model = Model;
+  Frame.ViewController = ViewController;
+  Frame.Application = Application;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
               </div>
               <p>Methods</p>
 
@@ -720,6 +883,81 @@ later.</p>
   Frame.makeArray = __makeArray;
   Frame.isBasicObject = __isBasicObject;
   Frame.gid = __gid;
+
+  <span class="comment">/*
+   * Define the application accessor.
+   * Once the application property is set it will use it to create
+   * a new instance of that object and uses that as the root of your application.
+   */</span>
+  Object.defineProperty(Frame, <span class="string">'application'</span>, {
+    set: <span class="keyword">function</span>(ApplicationObject) {
+      <span class="keyword">var</span> app;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-45">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <p>Create a new application instance from the given application class.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      app = <span class="keyword">new</span> ApplicationObject();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-46">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <p>Set Frame&#39;s application instance.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.applicationInstance = app;
+
+      app.didFinishLaunching();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-47">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <p>If a rootViewController is set call the conrollers loadView method</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span>(app.rootViewController) app.rootViewController.loadView();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-48">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+              <p>Set up the terminate callback</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      $(window).on(<span class="string">'beforeunload'</span>, <span class="keyword">function</span>() {
+        app.willTerminate();
+      });
+    },
+  });
 
   window.Frame = Frame;
 });</pre></div></div>
