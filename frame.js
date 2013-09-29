@@ -1,8 +1,8 @@
 $(function() {
   var Frame = {};
   // Helper methods
-  var __emptyHash = {}, __has, __extend;
-  __has = function(object, property) { return __emptyHash.hasOwnProperty.call(object, property); }
+  var __emptyHash = {}, __has, __extend, __currentGID = 0,
+  __has = function(object, property) { return __emptyHash.hasOwnProperty.call(object, property); },
   __keys = function(object) {
     var keys = []
     for(var k in object) {
@@ -11,15 +11,24 @@ $(function() {
       }
     }
     return keys;
-  }
+  },
   __makeArray = function(object) {
     if( !(object instanceof Array) ) {
       object = [object];
     }
     return object;
-  }
+  },
   __isBasicObject = function(object) {
     return __has(object, 'basicObjectDefined');
+  },
+  // Returns a new GID with the given prefix. GIDs are always returned as string
+  __gid = function(prefix) {
+    var GID = (++__currentGID).toString();
+    if(prefix) {
+      GID = prefex+"-"+GID;
+    }
+
+    return GID;
   }
 
   // Creates a shared instance method
@@ -80,7 +89,11 @@ $(function() {
 
   // Basic low level object. Contains most low level object functions such as KVO & KVC.
   var BasicObject = function(options) {
+    /* These values are not meant to be KVO. */
+    // Determines whether this object is a basic object so you can distinguish them from regular objects.
     this.basicObjectDefined=true
+    // The current id of the object
+    this.gid = __gid();
 
     if(this.initialize) {
       // Call the initialize method if it's present and pass in the options
@@ -250,6 +263,7 @@ $(function() {
   Frame.keys = __keys;
   Frame.makeArray = __makeArray;
   Frame.isBasicObject = __isBasicObject;
+  Frame.gid = __gid;
 
   window.Frame = Frame;
 });
