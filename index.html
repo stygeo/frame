@@ -13,7 +13,7 @@
 <script>hljs.initHighlightingOnLoad();</script>
 <link rel="stylesheet" type="text/css" href="css/solarized_light.css">
 
-<script type="text/javascript" src="javascript/frame.js"></script>
+<script type="text/javascript" src="../frame.js"></script>
 
 <style type="text/css">
   html, body {
@@ -54,12 +54,20 @@
     <strong>Download</strong>
   </a>
   <div class="item">
+    <b>Frame</b>
+    <div class="sub menu">
+      <a class="item" href="https://github.com/stygeo/frame">Github page</a>
+      <a class="item" href="frame.html">Annonated source</a>
+    </div>
+  </div>
+  <div class="item">
     <b>BasicObject</b>
     <div class="sub menu">
       <a class="item" href="#basic-object-constructor">constructor / initializer</a>
       <a class="item" href="#basic-object-property">property</a>
       <a class="item" href="#basic-object-addobserverforkey">addObserverForKey</a>
       <a class="item" href="#basic-object-valueforkey">valueForKey</a>
+      <a class="item" href="#basic-object-gid">gid</a>
     </div>
   </div>
   <div class="item">
@@ -68,6 +76,18 @@
       <a class="item" href="#model-constructor">constructor / initializer</a>
       <a class="item" href="#model-tojson">toJSON</a>
       <a class="item" href="#model-fetch">fetch</a>
+    </div>
+  </div>
+
+  <div class="item">
+    <b>Global</b>
+    <div class="sub menu">
+      <a class="item" href="#frame-createdefaultinstancemethodon">createDefaultInstanceMethod</a>
+      <a class="item" href="#frame-has">has</a>
+      <a class="item" href="#frame-keys">keys</a>
+      <a class="item" href="#frame-keys">makeArray</a>
+      <a class="item" href="#frame-keys">isBasicObject</a>
+      <a class="item" href="#frame-keys">gid</a>
     </div>
   </div>
 </div>
@@ -127,16 +147,20 @@ book.title = "The Thief of Books";</code></pre>
   </div>
   <script type="text/javascript">
   $(function() {
+    $this = this;
+    this.observeValueForKey = function(key, value) {
+      alert("Key '"+key+"' changed value to '"+value+"'");
+    }
+
+    var book = new Frame.Model({
+      title: "The Book Thief",
+      author: "Markus Zusak"
+    });
+
     $("#code-run-3").on('click', function(e) {
-      this.observeValueForKey = function(key, value) {
-        alert("Key '"+key+"' changed value to '"+value+"'");
-      }
-      var book = new Frame.Model({
-        title: "The Book Thief",
-        author: "Markus Zusak"
-      });
-      book.addObserverForKey(this, 'title');
+      book.addObserverForKey($this, 'title');
       book.title = "The Thief of Books";
+      book.removeObserverForKey($this, 'title');
 
       e.preventDefault();
     });
@@ -149,6 +173,19 @@ book.title = "The Thief of Books";</code></pre>
   </h3>
 
   <p>The valueForKey method is borrowed from Objective C. It's both a get and set accessor method for any given value on the object and respects KVO.</p>
+
+  <h3>
+    BasicObject gid
+    <code>object.gid</code>
+  </h3>
+  <p>
+  Every object that inherits from BasicObject has a global unique identifier. The <code>BasicObject</code>'s gid is a unique number.
+  You may if you wish set gid your self with the <code>Frame.gid([prefix])</code> yourself. Using a prefex will result in identifiers such as
+  <code>view-8342</code>.
+  </p>
+
+
+
   <hr>
 
   <h2>Model</h2>
@@ -190,6 +227,20 @@ book.title = "The Thief of Books";</code></pre>
       <i class="play icon"></i>
       Try me
     </a>
+    <script type="text/javascript">
+      $(function() {
+        var book = new Frame.Model({
+          title: "The Book Thief",
+          author: "Markus Zusak"
+        })
+
+        $("#code-run-1").on('click', function(e){
+
+          alert(JSON.stringify(book));
+          e.preventDefault();
+        });
+      });
+    </script>
   </div>
 
   <h3>
@@ -212,41 +263,29 @@ date.fetch({}, {
     alert(JSON.stringify(this));
   }
 })</code></pre>
-      <a id="code-run-2" href="#" class="ui icon labeled secondary button">
-        <i class="play icon"></i>
-        Try me
-      </a>
+    <a id="code-run-2" href="#" class="ui icon labeled secondary button">
+      <i class="play icon"></i>
+      Try me
+    </a>
+    <script type="text/javascript">
+      $(function() {
+        var date = new Frame.Model({
+          url: 'http://date.jsontest.com'
+        });
+        $("#code-run-2").on('click', function(e) {
+          date.fetch({}, {
+            success: function(data, textStatus, xhr) {
+              alert(JSON.stringify(this));
+            }
+          })
+
+          e.preventDefault();
+        });
+      });
+    </script>
   </div>
   <p>Please note that normally you would extend the model and set the on the object.</p>
 </div>
 
-<script type="text/javascript">
-  $(function() {
-    $("#code-run-1").on('click', function(e){
-      var book = new Frame.Model({
-        title: "The Book Thief",
-        author: "Markus Zusak"
-      })
-      console.log(book)
-
-      alert(JSON.stringify(book));
-      e.preventDefault();
-    });
-
-
-    $("#code-run-2").on('click', function(e) {
-      var date = new Frame.Model({
-        url: 'http://date.jsontest.com'
-      });
-      date.fetch({}, {
-        success: function(data, textStatus, xhr) {
-          alert(JSON.stringify(this));
-        }
-      })
-
-      e.preventDefault();
-    });
-  });
-</script>
 </body>
 </html>
