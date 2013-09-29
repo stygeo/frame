@@ -13,7 +13,8 @@
 <script>hljs.initHighlightingOnLoad();</script>
 <link rel="stylesheet" type="text/css" href="css/solarized_light.css">
 
-<script type="text/javascript" src="javascript/frame.js"></script>
+<script type="text/javascript" src="frame.js"></script>
+<script type="text/javascript" src="getting-started.js"></script>
 
 <style type="text/css">
   html, body {
@@ -42,7 +43,7 @@
   pre {
     border:1px solid #e7dec3 !important;
     margin-top: 0;
-    width: 500px;
+    min-width: 500px;
   }
 
 </style>
@@ -58,6 +59,7 @@
     <div class="sub menu">
       <a class="item" href="https://github.com/stygeo/frame">Github page</a>
       <a class="item" href="frame.html">Annonated source</a>
+      <a class="item" href="#getting-started">Getting started</a>
     </div>
   </div>
   <div class="item">
@@ -96,6 +98,40 @@
   <p>Frame is an extensive framework for the web written in JavaScript based on Objective-C and Apple's UIKit framework. While not identical it's heavy inspired by Apple's API
   design philosophy.</p>
 
+  <h2>Getting started</h2>
+  <h3>Firing up the application stack</h3>
+  <p>
+  Every application with defining a new <code>Frame.Application</code> class and setting it to a special Frame attribute called <code>application</code>.
+  The application class should implement at least one function <code>didFinishLaunching</code>. This method is called on your Application class once the DOM
+  is ready and all javascript has been loaded and parsed.
+  </p>
+  <pre><code class="javascript">Frame.application = Frame.Application.extend({
+  didFinishLaunching: function() {
+    // Method fired as soon as all javascript has been loaded and when the DOM is ready
+  }
+});</code></pre>
+
+  <h3>Defining your first ViewController</h3>
+  <p>
+  A ViewController is a class which manages the relation between a view and any data there might be present. Any logic which doesn't belong directly
+  within the view should be placed within the controller (ARGUMENTATION/CITATION NEEDED). Every ViewController has at least one view, the <strong>root view</strong> (accessed through <code>controller.view</code>).
+  This view is created automatically once <code>loadView</code> is called (there's usually no need to call this method, it will be handled for you). Once the loadView method is 
+  called and the view has been initialized and created it will call the <code>viewDidLoad</code> method on your controller.
+  </p>
+  <p>The first ViewController of your application should be set as your application's <code>rootViewController</code>.</p>
+  <pre><code class="javascript">var BookViewController = new Frame.ViewController({
+  viewDidLoad: function() {
+    // Add subviews, events, etc.
+  }
+});
+
+Frame.application = Frame.Application.extend({
+  didFinishLaunching: function() {
+    this.rootViewController = new BookViewController();
+  }
+});</code></pre>
+
+
 
   <h2>BasicObject</h2>
   <p>
@@ -131,7 +167,7 @@
   </p>
 
   <div class="try-code">
-    <pre><code>this.observeValueForKey = function(key, value) {
+    <pre><code class="javascript">this.observeValueForKey = function(key, value) {
   alert("Key '"+key+"' changed value to '"+value+"'");
 }
 var book = new Frame.Model({
@@ -200,7 +236,7 @@ book.title = "The Thief of Books";</code></pre>
   wish to set on the model. Accessors will be created automatically.
   </p>
   <div class="try-code">
-    <pre><code>var model = new Frame.Model({
+    <pre><code class="javascript">var model = new Frame.Model({
   title: "My title",
   content: "My model with attributes"
 })
@@ -216,7 +252,7 @@ book.title = "The Thief of Books";</code></pre>
   Returns a copy of the attributes of the model which can be serialized by <code>JSON</code>.
   </p>
   <div class="try-code">
-    <pre><code>
+    <pre><code class="javascript">
     var book = new Frame.Model({
       title: "The Book Thief",
       author: "Markus Zusak"
@@ -255,7 +291,7 @@ book.title = "The Thief of Books";</code></pre>
   <p>The success callback in the options hash are passed <code>(data, textStatus, xhr)</code></p>
 
   <div class="try-code">
-    <pre><code>var date = new Frame.Model({
+    <pre><code class="javascript">var date = new Frame.Model({
   url: 'http://date.jsontest.com'
 });
 date.fetch({}, {

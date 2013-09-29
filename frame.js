@@ -253,9 +253,59 @@ $(function() {
     },
   });
 
+  /*
+   * Controllers
+   */
+
+  var ViewController = BasicObject.extend({
+    // The root view of this controller.
+    view: undefined,
+
+    constructor: function(attributes, options) {
+      // Call the basic object's constructor.
+      BasicObject.call(this, options);
+
+      if(this.initialize) {
+        // Call the initialize method if it's present and pass in the options
+        this.initialize.apply(this, options);
+      }
+    },
+
+    loadView: function() {
+      // Notify the inherited controller that the view is about to be loaded.
+      this.viewWillLoad();
+
+      // Create a new View and pass it the el (el may be undefined)
+      this.view = new BasicObject({el: this.el});
+
+      // Notify the inherited controller that the view has been loaded and is ready.
+      this.viewDidLoad();
+
+      // Return the view so that who ever called this function can add the DOM Nodes.
+      return this.view;
+    },
+
+    // Will be called when the view is done loading and is set up.
+    viewDidLoad:  function(){},
+    // Will be called before any view loading is done.
+    viewWillLoad: function(){},
+  });
+
+  /*
+   * Application class, root of the application stack.
+   */
+  var Application = BasicObject.extend({
+    didFinishLoading: function() {
+      throw Error("didFinishLoading was not everwritten by subclass or Frame.Application was used directly as application class.");
+    },
+    willTerminate: function(){}
+  });
+
   // Objects
   Frame.BasicObject = BasicObject;
   Frame.Model = Model;
+  Frame.ViewController = ViewController;
+  Frame.Application = Application;
 
   // Methods
   Frame.createDefaultInstanceMethodOn = createDefaultInstanceMethodOn;
@@ -264,6 +314,32 @@ $(function() {
   Frame.makeArray = __makeArray;
   Frame.isBasicObject = __isBasicObject;
   Frame.gid = __gid;
+
+  /*
+   * Define the application accessor.
+   * Once the application property is set it will use it to create
+   * a new instance of that object and uses that as the root of your application.
+   */
+  Object.defineProperty(Frame, 'application', {
+    set: function(ApplicationObject) {
+      var app;
+
+      // Create a new application instance from the given application class.
+      app = new ApplicationObject();
+      // Set Frame's application instance.
+      this.applicationInstance = app;
+
+      app.didFinishLaunching();
+
+      // If a rootViewController is set call the conrollers loadView method
+      if(app.rootViewController) app.rootViewController.loadView();
+
+      // Set up the terminate callback
+      $(window).on('beforeunload', function() {
+        app.willTerminate();
+      });
+    },
+  });
 
   window.Frame = Frame;
 });
