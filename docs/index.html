@@ -113,17 +113,27 @@
   }
 });</code></pre>
 
-  <h3>Defining your first ViewController</h3>
+  <h3>The Root ViewController and the View</h3>
   <p>
   A ViewController is a class which manages the relation between a view and any data there might be present. Any logic which doesn't belong directly
   within the view should be placed within the controller (ARGUMENTATION/CITATION NEEDED). Every ViewController has at least one view, the <strong>root view</strong> (accessed through <code>controller.view</code>).
   This view is created automatically once <code>loadView</code> is called (there's usually no need to call this method, it will be handled for you). Once the loadView method is 
-  called and the view has been initialized and created it will call the <code>viewDidLoad</code> method on your controller.
+  called and the view has been initialized and created it will call the <code>viewDidLoad</code> method on your controller and you can add new custom views to the controller's root view with the <code>addSubview(view)</code> method.
   </p>
   <p>The first ViewController of your application should be set as your application's <code>rootViewController</code>.</p>
-  <pre><code class="javascript">var BookViewController = new Frame.ViewController({
+  <pre><code class="javascript">var MyView = Frame.View.extend({
+  // Define a custom draw method
+  draw: function() {
+    this.$.html("Hello world");
+  }
+});
+
+// Define the view controller
+var BookViewController = new Frame.ViewController({
   viewDidLoad: function() {
     // Add subviews, events, etc.
+    var myView = new MyView();
+    this.view.addSubview(myView);
   }
 });
 
@@ -132,6 +142,15 @@ Frame.application = Frame.Application.extend({
     this.rootViewController = new BookViewController();
   }
 });</code></pre>
+  <p>
+  Once you've added a view to the controller's view it will automatically draw and insert the content in the parent's view. Under the hood it will call <code>element.append</code> unless the view
+  has a the <code>el</code> property set. It will attempt to find the element within the parent, bind to it and render it's content to that element instead. Otherwise it will simply create a new
+  <code>&lt;div/&gt;</code>.
+  </p>
+
+  <p>
+  Every view has a special <code>$</code> attribute. This is the jQuery selector for your current view. Like in the example doing <code>this.$.html("Hello world")</code> will render "Hello world" to
+  the view.
 
   <div class="ui divider"></div>
 
