@@ -1,5 +1,5 @@
 $(function() {
-  var BookViewController, DateView;
+  var DateViewController, DateView;
 
   DateView = Frame.View.extend({
     constructor: function() {
@@ -31,9 +31,8 @@ $(function() {
       }, 1000);
     },
   });
-  DateView.property('time')
 
-  BookViewController = Frame.ViewController.extend({
+  DateViewController = Frame.ViewController.extend({
     // If you want the root view (this.view) to latch to any existing element
     // set the 'el' attribute from within the initialize method. It will be passed on to the view.
     // If no element with the specified attributes exists it creates a new DOM node.
@@ -60,7 +59,7 @@ $(function() {
       // Method fired as soon as all javascript has been loaded and when the DOM is ready
 
       // Setup root view controller. All ViewControllers have a root view (controller.view) set.
-      this.rootViewController = new BookViewController();
+      this.rootViewController = new DateViewController();
 
       // Once this function returns, if a rootViewController is present, it will call loadView on the root view controller
     },
