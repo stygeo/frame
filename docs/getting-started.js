@@ -7,7 +7,7 @@ $(function() {
 
       this.dateModel = new Frame.Model({date: new Date()});
 
-      this.dateModel.addObserverForKey(this, 'date');
+      this.dateModel.addObserverForKey('date', _.bind(this.update, this));
     },
 
     draw: function() {
