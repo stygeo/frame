@@ -3,6 +3,7 @@
 git checkout master
 
 docco frame.js
+docco docs/getting-started.js
 git commit -am "Updated annonated source"
 
 rm -rf /tmp/frame
