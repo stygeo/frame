@@ -267,9 +267,12 @@ $(function() {
    * Views
    */
 
-  // Basic view
+  /*
+   * Basic view
+   */
   var View = BasicObject.extend({
     subviews: [],
+    element: 'div',
 
     constructor: function(options) {
       if(!options) options = {};
@@ -297,7 +300,7 @@ $(function() {
   // Generic accessor for the view's element (either created or 'fetched').
   Object.defineProperty(View.prototype, "$", {
     get: function() {
-      var element = this.el || '<div/>';
+      var element = this.el || '<'+this.element+'/>';
 
       if(!this.__collection) this.__collection = $(element);
 
@@ -305,15 +308,21 @@ $(function() {
     }
   });
 
+  /*
+   * Canvas view.
+   */
   var CanvasView = View.extend({
     // Create a canvas element if no element is given
     element: 'canvas',
 
     constructor: function(options) {
+      if(!options) options = {};
+
       // Call the super view's constructor
       View.call(this, options);
 
-      this.context = this.$.getContext('2d');
+      this.$.attr({width: options.width, height: options.height});
+      this.context = this.$[0].getContext('2d');
     }
   });
 
