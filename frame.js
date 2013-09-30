@@ -21,6 +21,9 @@ $(function() {
   __isBasicObject = function(object) {
     return __has(object, 'basicObjectDefined');
   },
+  __isString = function(object) {
+    return typeof(object) == "string";
+  },
   // Returns a new GID with the given prefix. GIDs are always returned as string
   __gid = function(prefix) {
     var GID = (++__currentGID).toString();
@@ -139,8 +142,12 @@ $(function() {
       for(var i = 0; i < this.observers[key].length; i++) {
         var observer = this.observers[key][i]
         if(observer !== undefined) {
-          // Signal the observer
-          observer.observeValueForKey.call(observer, key, value)
+          // Signal the observer or call the callback
+          if($.isFunction(observer)) {
+            observer.call(this, key, value);
+          } else {
+            observer.observeValueForKey.call(observer, key, value)
+          }
         }
       }
     }
@@ -161,7 +168,16 @@ $(function() {
   }
 
   // Observe the given key. (Key Value Observing, KVO)
-  BasicObject.prototype.addObserverForKey = function(observer, key, options) {
+  BasicObject.prototype.addObserverForKey = function(observerOrKey, keyOrCallback, options) {
+    var observer, key;
+    if(__isString(observerOrKey) && $.isFunction(keyOrCallback)) {
+      observer = keyOrCallback;
+      key = observerOrKey;
+    } else {
+      observer = observerOrKey;
+      key = keyOrCallback;
+    }
+
     if(this.observers[key] === undefined) {
       this.observers[key] = []
     }

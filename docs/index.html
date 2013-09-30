@@ -160,11 +160,12 @@ Frame.application = Frame.Application.extend({
 
   <h3>
     BasicObject Key Value Observing
-    <code>object.addObserverForKey(observer, key, [options])</code>
+    <code>object.addObserverForKey(observerOrKey, keyOrCallback, [options])</code>
   </h3>
   <p>
   Add an observer for the given key. The observer will be notified once the given key/property has changed to a new value. The observer must implement the
-  <code>observeValueForKey(key, value)</code> method, which will be passed the key which has changed with a new value.
+  <code>observeValueForKey(key, value)</code> method, which will be passed the key which has changed with a new value. If you want to supply a callback instead of using
+  an observer you may pass in the property for the <code>observerOrKey</code> and a callback as <code>keyOrCallback</code>.
   The optional options are currently not in use.
   </p>
 
