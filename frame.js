@@ -12,6 +12,13 @@ $(function() {
     }
     return keys;
   },
+  __merge = function(hash, otherHash) {
+    for (var key in otherHash) {
+      if (__has(otherHash, key) && !__has(hash, key)) {
+        hash[key] = otherHash[key];
+      }
+    }
+  },
   __makeArray = function(object) {
     if( !(object instanceof Array) ) {
       object = [object];
@@ -20,6 +27,9 @@ $(function() {
   },
   __isBasicObject = function(object) {
     return __has(object, 'basicObjectDefined');
+  },
+  __isString = function(object) {
+    return typeof(object) == "string";
   },
   // Returns a new GID with the given prefix. GIDs are always returned as string
   __gid = function(prefix) {
@@ -62,12 +72,8 @@ $(function() {
     var Surrogate = function(){ this.constructor = child; };
     Surrogate.prototype = parent.prototype;
     // Copy over static methods
-    for (var key in protoProps) {
-      if (__has(protoProps, key)) {
-        Surrogate.prototype[key] = protoProps[key];
-      }
-    }
     child.prototype = new Surrogate;
+    if (protoProps) _.extend(child.prototype, protoProps);
 
     // Copy over static methods
     for (var key in parent) {
@@ -94,11 +100,6 @@ $(function() {
     this.basicObjectDefined=true
     // The current id of the object
     this.gid = __gid();
-
-    if(this.initialize) {
-      // Call the initialize method if it's present and pass in the options
-      this.initialize.apply(this, options);
-    }
   };
   BasicObject.extend = __extend;
 
@@ -139,8 +140,12 @@ $(function() {
       for(var i = 0; i < this.observers[key].length; i++) {
         var observer = this.observers[key][i]
         if(observer !== undefined) {
-          // Signal the observer
-          observer.observeValueForKey.call(observer, key, value)
+          // Signal the observer or call the callback
+          if($.isFunction(observer)) {
+            observer.call(this, key, value);
+          } else {
+            observer.observeValueForKey.call(observer, key, value)
+          }
         }
       }
     }
@@ -161,7 +166,16 @@ $(function() {
   }
 
   // Observe the given key. (Key Value Observing, KVO)
-  BasicObject.prototype.addObserverForKey = function(observer, key, options) {
+  BasicObject.prototype.addObserverForKey = function(observerOrKey, keyOrCallback, options) {
+    var observer, key;
+    if(__isString(observerOrKey) && $.isFunction(keyOrCallback)) {
+      observer = keyOrCallback;
+      key = observerOrKey;
+    } else {
+      observer = observerOrKey;
+      key = keyOrCallback;
+    }
+
     if(this.observers[key] === undefined) {
       this.observers[key] = []
     }
@@ -193,10 +207,6 @@ $(function() {
       // Serialize the attributes
       this.serialize(attributes);
 
-      if(this.initialize) {
-        // Call the initialize method if it's present and pass in the options
-        this.initialize.apply(this, options);
-      }
     },
     // Load data from the remote source
     fetch: function(parameters, options) {
@@ -254,6 +264,69 @@ $(function() {
   });
 
   /*
+   * Views
+   */
+
+  /*
+   * Basic view
+   */
+  var View = BasicObject.extend({
+    subviews: [],
+    element: 'div',
+
+    constructor: function(options) {
+      if(!options) options = {};
+
+      // Call the basic object's constructor.
+      BasicObject.call(this, options);
+
+      // Set the element of the controller
+      this.el = options.el;
+    },
+
+    addSubview: function(subview) {
+      // Add the subview to this view
+      this.subviews.push(subview);
+
+      // Draw the view
+      subview.draw();
+
+      this.$.append(subview.$);
+    },
+
+    draw: function() {
+    },
+  });
+  // Generic accessor for the view's element (either created or 'fetched').
+  Object.defineProperty(View.prototype, "$", {
+    get: function() {
+      var element = this.el || '<'+this.element+'/>';
+
+      if(!this.__collection) this.__collection = $(element);
+
+      return this.__collection;
+    }
+  });
+
+  /*
+   * Canvas view.
+   */
+  var CanvasView = View.extend({
+    // Create a canvas element if no element is given
+    element: 'canvas',
+
+    constructor: function(options) {
+      if(!options) options = {};
+
+      // Call the super view's constructor
+      View.call(this, options);
+
+      this.$.attr({width: options.width, height: options.height});
+      this.context = this.$[0].getContext('2d');
+    }
+  });
+
+  /*
    * Controllers
    */
 
@@ -261,14 +334,13 @@ $(function() {
     // The root view of this controller.
     view: undefined,
 
-    constructor: function(attributes, options) {
+    constructor: function(options) {
+      if(!options) options = {};
+
       // Call the basic object's constructor.
       BasicObject.call(this, options);
 
-      if(this.initialize) {
-        // Call the initialize method if it's present and pass in the options
-        this.initialize.apply(this, options);
-      }
+      this.el = options.el;
     },
 
     loadView: function() {
@@ -276,7 +348,7 @@ $(function() {
       this.viewWillLoad();
 
       // Create a new View and pass it the el (el may be undefined)
-      this.view = new BasicObject({el: this.el});
+      this.view = new View({el: this.el});
 
       // Notify the inherited controller that the view has been loaded and is ready.
       this.viewDidLoad();
@@ -290,6 +362,7 @@ $(function() {
     // Will be called before any view loading is done.
     viewWillLoad: function(){},
   });
+
 
   /*
    * Application class, root of the application stack.
@@ -305,6 +378,9 @@ $(function() {
   Frame.BasicObject = BasicObject;
   Frame.Model = Model;
   Frame.ViewController = ViewController;
+  Frame.View = View;
+  Frame.CanvasView = CanvasView;
+
   Frame.Application = Application;
 
   // Methods
@@ -332,7 +408,14 @@ $(function() {
       app.didFinishLaunching();
 
       // If a rootViewController is set call the conrollers loadView method
-      if(app.rootViewController) app.rootViewController.loadView();
+      if(app.rootViewController) {
+        // Set the body if no element has been set on the root controller.
+        if(!app.rootViewController.el) app.rootViewController.el = 'body';
+
+        // Load the view and draw it
+        var view = app.rootViewController.loadView();
+        view.draw();
+      }
 
       // Set up the terminate callback
       $(window).on('beforeunload', function() {

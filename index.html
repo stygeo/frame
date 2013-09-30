@@ -7,14 +7,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
 <link rel="stylesheet" type="text/css" href="css/semantic.css">
-<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js"></script>
-<script type="text/javascript" src="javascript/semantic.min.js"></script>
 <script type="text/javascript" src="javascript/highlight.pack.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
 <link rel="stylesheet" type="text/css" href="css/solarized_light.css">
 
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+<script type="text/javascript" src="javascript/semantic.min.js"></script>
+
 <script type="text/javascript" src="frame.js"></script>
-<script type="text/javascript" src="getting-started.js"></script>
 
 <style type="text/css">
   html, body {
@@ -60,6 +61,7 @@
       <a class="item" href="https://github.com/stygeo/frame">Github page</a>
       <a class="item" href="frame.html">Annonated source</a>
       <a class="item" href="#getting-started">Getting started</a>
+      <a class="item" href="https://github.com/stygeo/getting-started.html">Annonated example</a>
     </div>
   </div>
   <div class="item">
@@ -160,11 +162,12 @@ Frame.application = Frame.Application.extend({
 
   <h3>
     BasicObject Key Value Observing
-    <code>object.addObserverForKey(observer, key, [options])</code>
+    <code>object.addObserverForKey(observerOrKey, keyOrCallback, [options])</code>
   </h3>
   <p>
   Add an observer for the given key. The observer will be notified once the given key/property has changed to a new value. The observer must implement the
-  <code>observeValueForKey(key, value)</code> method, which will be passed the key which has changed with a new value.
+  <code>observeValueForKey(key, value)</code> method, which will be passed the key which has changed with a new value. If you want to supply a callback instead of using
+  an observer you may pass in the property for the <code>observerOrKey</code> and a callback as <code>keyOrCallback</code>.
   The optional options are currently not in use.
   </p>
 
