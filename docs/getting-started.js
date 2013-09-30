@@ -48,8 +48,6 @@ $(function() {
 
       this.subview = new DateView();
       this.view.addSubview(this.subview);
-
-      this.subview.update();
     }
   });
 
