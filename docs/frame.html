@@ -57,6 +57,13 @@
     }
     <span class="keyword">return</span> keys;
   },
+  __merge = <span class="keyword">function</span>(hash, otherHash) {
+    <span class="keyword">for</span> (<span class="keyword">var</span> key <span class="keyword">in</span> otherHash) {
+      <span class="keyword">if</span> (__has(otherHash, key) &amp;&amp; !__has(hash, key)) {
+        hash[key] = otherHash[key];
+      }
+    }
+  },
   __makeArray = <span class="keyword">function</span>(object) {
     <span class="keyword">if</span>( !(object <span class="keyword">instanceof</span> Array) ) {
       object = [object];
@@ -65,6 +72,9 @@
   },
   __isBasicObject = <span class="keyword">function</span>(object) {
     <span class="keyword">return</span> __has(object, <span class="string">'basicObjectDefined'</span>);
+  },
+  __isString = <span class="keyword">function</span>(object) {
+    <span class="keyword">return</span> <span class="keyword">typeof</span>(object) == <span class="string">"string"</span>;
   },</pre></div></div>
             
         </li>
@@ -157,12 +167,8 @@
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    <span class="keyword">for</span> (<span class="keyword">var</span> key <span class="keyword">in</span> protoProps) {
-      <span class="keyword">if</span> (__has(protoProps, key)) {
-        Surrogate.prototype[key] = protoProps[key];
-      }
-    }
-    child.prototype = <span class="keyword">new</span> Surrogate;</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    child.prototype = <span class="keyword">new</span> Surrogate;
+    <span class="keyword">if</span> (protoProps) _.extend(child.prototype, protoProps);</pre></div></div>
             
         </li>
         
@@ -264,8 +270,8 @@ later.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>    <span class="keyword">this</span>.gid = __gid();
-
-    <span class="keyword">if</span>(<span class="keyword">this</span>.initialize) {</pre></div></div>
+  };
+  BasicObject.extend = __extend;</pre></div></div>
             
         </li>
         
@@ -275,24 +281,6 @@ later.</p>
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-13">&#182;</a>
-              </div>
-              <p>Call the initialize method if it&#39;s present and pass in the options</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.initialize.apply(<span class="keyword">this</span>, options);
-    }
-  };
-  BasicObject.extend = __extend;</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-14">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
               <p>Public property setter. Creates specialized properties which can be accessed through KVC and make use of KVO</p>
 
@@ -328,11 +316,11 @@ later.</p>
         </li>
         
         
-        <li id="section-15">
+        <li id="section-14">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-15">&#182;</a>
+                <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
               <p>Specialized setter. Calls callbacks on observed values</p>
 
@@ -349,17 +337,21 @@ later.</p>
         </li>
         
         
-        <li id="section-16">
+        <li id="section-15">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-16">&#182;</a>
+                <a class="pilcrow" href="#section-15">&#182;</a>
               </div>
-              <p>Signal the observer</p>
+              <p>Signal the observer or call the callback</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>          observer.observeValueForKey.call(observer, key, value)
+            <div class="content"><div class='highlight'><pre>          <span class="keyword">if</span>($.isFunction(observer)) {
+            observer.call(<span class="keyword">this</span>, key, value);
+          } <span class="keyword">else</span> {
+            observer.observeValueForKey.call(observer, key, value)
+          }
         }
       }
     }
@@ -368,11 +360,11 @@ later.</p>
         </li>
         
         
-        <li id="section-17">
+        <li id="section-16">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-17">&#182;</a>
+                <a class="pilcrow" href="#section-16">&#182;</a>
               </div>
               <p>Basic object getter</p>
 
@@ -385,11 +377,11 @@ later.</p>
         </li>
         
         
-        <li id="section-18">
+        <li id="section-17">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-18">&#182;</a>
+                <a class="pilcrow" href="#section-17">&#182;</a>
               </div>
               <p>Returns the given or sets the given key with value (Key Value Coding, KVC)</p>
 
@@ -406,17 +398,26 @@ later.</p>
         </li>
         
         
-        <li id="section-19">
+        <li id="section-18">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-19">&#182;</a>
+                <a class="pilcrow" href="#section-18">&#182;</a>
               </div>
               <p>Observe the given key. (Key Value Observing, KVO)</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  BasicObject.prototype.addObserverForKey = <span class="keyword">function</span>(observer, key, options) {
+            <div class="content"><div class='highlight'><pre>  BasicObject.prototype.addObserverForKey = <span class="keyword">function</span>(observerOrKey, keyOrCallback, options) {
+    <span class="keyword">var</span> observer, key;
+    <span class="keyword">if</span>(__isString(observerOrKey) &amp;&amp; $.isFunction(keyOrCallback)) {
+      observer = keyOrCallback;
+      key = observerOrKey;
+    } <span class="keyword">else</span> {
+      observer = observerOrKey;
+      key = keyOrCallback;
+    }
+
     <span class="keyword">if</span>(<span class="keyword">this</span>.observers[key] === <span class="literal">undefined</span>) {
       <span class="keyword">this</span>.observers[key] = []
     }
@@ -427,11 +428,11 @@ later.</p>
         </li>
         
         
-        <li id="section-20">
+        <li id="section-19">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-20">&#182;</a>
+                <a class="pilcrow" href="#section-19">&#182;</a>
               </div>
               <p>Remove the given observer with the specified key</p>
 
@@ -455,11 +456,11 @@ later.</p>
         </li>
         
         
-        <li id="section-21">
+        <li id="section-20">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-21">&#182;</a>
+                <a class="pilcrow" href="#section-20">&#182;</a>
               </div>
               <p>The basic model. Inherit from this object.</p>
 
@@ -471,11 +472,11 @@ later.</p>
         </li>
         
         
-        <li id="section-22">
+        <li id="section-21">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-22">&#182;</a>
+                <a class="pilcrow" href="#section-21">&#182;</a>
               </div>
               <p>Call the basic object&#39;s constructor.</p>
 
@@ -486,11 +487,11 @@ later.</p>
         </li>
         
         
-        <li id="section-23">
+        <li id="section-22">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-23">&#182;</a>
+                <a class="pilcrow" href="#section-22">&#182;</a>
               </div>
               <p>Serialize the attributes</p>
 
@@ -498,33 +499,16 @@ later.</p>
             
             <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.serialize(attributes);
 
-      <span class="keyword">if</span>(<span class="keyword">this</span>.initialize) {</pre></div></div>
-            
-        </li>
-        
-        
-        <li id="section-24">
-            <div class="annotation">
-              
-              <div class="pilwrap ">
-                <a class="pilcrow" href="#section-24">&#182;</a>
-              </div>
-              <p>Call the initialize method if it&#39;s present and pass in the options</p>
-
-            </div>
-            
-            <div class="content"><div class='highlight'><pre>        <span class="keyword">this</span>.initialize.apply(<span class="keyword">this</span>, options);
-      }
     },</pre></div></div>
             
         </li>
         
         
-        <li id="section-25">
+        <li id="section-23">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-25">&#182;</a>
+                <a class="pilcrow" href="#section-23">&#182;</a>
               </div>
               <p>Load data from the remote source</p>
 
@@ -542,11 +526,11 @@ later.</p>
         </li>
         
         
-        <li id="section-26">
+        <li id="section-24">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-26">&#182;</a>
+                <a class="pilcrow" href="#section-24">&#182;</a>
               </div>
               <p>Serialize the attributes</p>
 
@@ -557,11 +541,11 @@ later.</p>
         </li>
         
         
-        <li id="section-27">
+        <li id="section-25">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-27">&#182;</a>
+                <a class="pilcrow" href="#section-25">&#182;</a>
               </div>
               <p>Call the success callback if it was specified</p>
 
@@ -583,11 +567,11 @@ later.</p>
         </li>
         
         
-        <li id="section-28">
+        <li id="section-26">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-28">&#182;</a>
+                <a class="pilcrow" href="#section-26">&#182;</a>
               </div>
               <p>Get the current object&#39;s constructor so we can bind values to it.</p>
 
@@ -598,11 +582,11 @@ later.</p>
         </li>
         
         
-        <li id="section-29">
+        <li id="section-27">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-29">&#182;</a>
+                <a class="pilcrow" href="#section-27">&#182;</a>
               </div>
               <p>Iterate over the retrieved attributes</p>
 
@@ -613,11 +597,11 @@ later.</p>
         </li>
         
         
-        <li id="section-30">
+        <li id="section-28">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-30">&#182;</a>
+                <a class="pilcrow" href="#section-28">&#182;</a>
               </div>
               <p>Model attributes are &#39;lazily&#39; added.</p>
 
@@ -628,11 +612,11 @@ later.</p>
         </li>
         
         
-        <li id="section-31">
+        <li id="section-29">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-31">&#182;</a>
+                <a class="pilcrow" href="#section-29">&#182;</a>
               </div>
               <p>Assign the attributes value</p>
 
@@ -645,11 +629,11 @@ later.</p>
         </li>
         
         
-        <li id="section-32">
+        <li id="section-30">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-32">&#182;</a>
+                <a class="pilcrow" href="#section-30">&#182;</a>
               </div>
               <p>Copies the attributes of the model to a new object.</p>
 
@@ -670,11 +654,11 @@ later.</p>
         </li>
         
         
-        <li id="section-33">
+        <li id="section-31">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-33">&#182;</a>
+                <a class="pilcrow" href="#section-31">&#182;</a>
               </div>
               <p>Validates the model (not the model&#39;s fields), such as URL.</p>
 
@@ -686,10 +670,51 @@ later.</p>
   });
 
   <span class="comment">/*
-   * Controllers
+   * Views
    */</span>
 
-  <span class="keyword">var</span> ViewController = BasicObject.extend({</pre></div></div>
+  <span class="comment">/*
+   * Basic view
+   */</span>
+  <span class="keyword">var</span> View = BasicObject.extend({
+    subviews: [],
+    element: <span class="string">'div'</span>,
+
+    constructor: <span class="keyword">function</span>(options) {
+      <span class="keyword">if</span>(!options) options = {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>Call the basic object&#39;s constructor.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      BasicObject.call(<span class="keyword">this</span>, options);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>Set the element of the controller</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.el = options.el;
+    },
+
+    addSubview: <span class="keyword">function</span>(subview) {</pre></div></div>
             
         </li>
         
@@ -700,13 +725,11 @@ later.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-34">&#182;</a>
               </div>
-              <p>The root view of this controller.</p>
+              <p>Add the subview to this view</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    view: <span class="literal">undefined</span>,
-
-    constructor: <span class="keyword">function</span>(attributes, options) {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.subviews.push(subview);</pre></div></div>
             
         </li>
         
@@ -717,13 +740,18 @@ later.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-35">&#182;</a>
               </div>
-              <p>Call the basic object&#39;s constructor.</p>
+              <p>Draw the view</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      BasicObject.call(<span class="keyword">this</span>, options);
+            <div class="content"><div class='highlight'><pre>      subview.draw();
 
-      <span class="keyword">if</span>(<span class="keyword">this</span>.initialize) {</pre></div></div>
+      <span class="keyword">this</span>.$.append(subview.$);
+    },
+
+    draw: <span class="keyword">function</span>() {
+    },
+  });</pre></div></div>
             
         </li>
         
@@ -734,15 +762,24 @@ later.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-36">&#182;</a>
               </div>
-              <p>Call the initialize method if it&#39;s present and pass in the options</p>
+              <p>Generic accessor for the view&#39;s element (either created or &#39;fetched&#39;).</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="keyword">this</span>.initialize.apply(<span class="keyword">this</span>, options);
-      }
-    },
+            <div class="content"><div class='highlight'><pre>  Object.defineProperty(View.prototype, <span class="string">"$"</span>, {
+    get: <span class="keyword">function</span>() {
+      <span class="keyword">var</span> element = <span class="keyword">this</span>.el || <span class="string">'&lt;'</span>+<span class="keyword">this</span>.element+<span class="string">'/&gt;'</span>;
 
-    loadView: <span class="keyword">function</span>() {</pre></div></div>
+      <span class="keyword">if</span>(!<span class="keyword">this</span>.__collection) <span class="keyword">this</span>.__collection = $(element);
+
+      <span class="keyword">return</span> <span class="keyword">this</span>.__collection;
+    }
+  });
+
+  <span class="comment">/*
+   * Canvas view.
+   */</span>
+  <span class="keyword">var</span> CanvasView = View.extend({</pre></div></div>
             
         </li>
         
@@ -753,11 +790,14 @@ later.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-37">&#182;</a>
               </div>
-              <p>Notify the inherited controller that the view is about to be loaded.</p>
+              <p>Create a canvas element if no element is given</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.viewWillLoad();</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    element: <span class="string">'canvas'</span>,
+
+    constructor: <span class="keyword">function</span>(options) {
+      <span class="keyword">if</span>(!options) options = {};</pre></div></div>
             
         </li>
         
@@ -768,11 +808,22 @@ later.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-38">&#182;</a>
               </div>
-              <p>Create a new View and pass it the el (el may be undefined)</p>
+              <p>Call the super view&#39;s constructor</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.view = <span class="keyword">new</span> BasicObject({el: <span class="keyword">this</span>.el});</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      View.call(<span class="keyword">this</span>, options);
+
+      <span class="keyword">this</span>.$.attr({width: options.width, height: options.height});
+      <span class="keyword">this</span>.context = <span class="keyword">this</span>.$[<span class="number">0</span>].getContext(<span class="string">'2d'</span>);
+    }
+  });
+
+  <span class="comment">/*
+   * Controllers
+   */</span>
+
+  <span class="keyword">var</span> ViewController = BasicObject.extend({</pre></div></div>
             
         </li>
         
@@ -783,11 +834,14 @@ later.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-39">&#182;</a>
               </div>
-              <p>Notify the inherited controller that the view has been loaded and is ready.</p>
+              <p>The root view of this controller.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.viewDidLoad();</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    view: <span class="literal">undefined</span>,
+
+    constructor: <span class="keyword">function</span>(options) {
+      <span class="keyword">if</span>(!options) options = {};</pre></div></div>
             
         </li>
         
@@ -797,6 +851,71 @@ later.</p>
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>Call the basic object&#39;s constructor.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      BasicObject.call(<span class="keyword">this</span>, options);
+
+      <span class="keyword">this</span>.el = options.el;
+    },
+
+    loadView: <span class="keyword">function</span>() {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <p>Notify the inherited controller that the view is about to be loaded.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.viewWillLoad();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <p>Create a new View and pass it the el (el may be undefined)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.view = <span class="keyword">new</span> View({el: <span class="keyword">this</span>.el});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>Notify the inherited controller that the view has been loaded and is ready.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.viewDidLoad();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
               </div>
               <p>Return the view so that who ever called this function can add the DOM Nodes.</p>
 
@@ -808,11 +927,11 @@ later.</p>
         </li>
         
         
-        <li id="section-41">
+        <li id="section-45">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-41">&#182;</a>
+                <a class="pilcrow" href="#section-45">&#182;</a>
               </div>
               <p>Will be called when the view is done loading and is set up.</p>
 
@@ -823,11 +942,11 @@ later.</p>
         </li>
         
         
-        <li id="section-42">
+        <li id="section-46">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-42">&#182;</a>
+                <a class="pilcrow" href="#section-46">&#182;</a>
               </div>
               <p>Will be called before any view loading is done.</p>
 
@@ -835,6 +954,7 @@ later.</p>
             
             <div class="content"><div class='highlight'><pre>    viewWillLoad: <span class="keyword">function</span>(){},
   });
+
 
   <span class="comment">/*
    * Application class, root of the application stack.
@@ -849,11 +969,11 @@ later.</p>
         </li>
         
         
-        <li id="section-43">
+        <li id="section-47">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-43">&#182;</a>
+                <a class="pilcrow" href="#section-47">&#182;</a>
               </div>
               <p>Objects</p>
 
@@ -862,16 +982,19 @@ later.</p>
             <div class="content"><div class='highlight'><pre>  Frame.BasicObject = BasicObject;
   Frame.Model = Model;
   Frame.ViewController = ViewController;
+  Frame.View = View;
+  Frame.CanvasView = CanvasView;
+
   Frame.Application = Application;</pre></div></div>
             
         </li>
         
         
-        <li id="section-44">
+        <li id="section-48">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-44">&#182;</a>
+                <a class="pilcrow" href="#section-48">&#182;</a>
               </div>
               <p>Methods</p>
 
@@ -896,11 +1019,11 @@ later.</p>
         </li>
         
         
-        <li id="section-45">
+        <li id="section-49">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-45">&#182;</a>
+                <a class="pilcrow" href="#section-49">&#182;</a>
               </div>
               <p>Create a new application instance from the given application class.</p>
 
@@ -911,11 +1034,11 @@ later.</p>
         </li>
         
         
-        <li id="section-46">
+        <li id="section-50">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-46">&#182;</a>
+                <a class="pilcrow" href="#section-50">&#182;</a>
               </div>
               <p>Set Frame&#39;s application instance.</p>
 
@@ -928,26 +1051,58 @@ later.</p>
         </li>
         
         
-        <li id="section-47">
+        <li id="section-51">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-47">&#182;</a>
+                <a class="pilcrow" href="#section-51">&#182;</a>
               </div>
               <p>If a rootViewController is set call the conrollers loadView method</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span>(app.rootViewController) app.rootViewController.loadView();</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span>(app.rootViewController) {</pre></div></div>
             
         </li>
         
         
-        <li id="section-48">
+        <li id="section-52">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-48">&#182;</a>
+                <a class="pilcrow" href="#section-52">&#182;</a>
+              </div>
+              <p>Set the body if no element has been set on the root controller.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="keyword">if</span>(!app.rootViewController.el) app.rootViewController.el = <span class="string">'body'</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-53">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-53">&#182;</a>
+              </div>
+              <p>Load the view and draw it</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="keyword">var</span> view = app.rootViewController.loadView();
+        view.draw();
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-54">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-54">&#182;</a>
               </div>
               <p>Set up the terminate callback</p>
 
