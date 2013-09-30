@@ -3,19 +3,26 @@ $(function() {
 
   DateView = Frame.View.extend({
     constructor: function() {
+      // Call super's constructor
       Frame.View.call(this);
 
+      // Create a new date model
       this.dateModel = new Frame.Model({date: new Date()});
 
+      // Add an observer to the date field
       this.dateModel.addObserverForKey('date', _.bind(this.update, this));
     },
 
+    // Draw method
     draw: function() {
+      // Set the date model's date as content
       this.$.html(this.dateModel.date);
 
+      // Update the date (this invoke the observer)
       this.dateModel.date = new Date();
     },
 
+    // Update method. Called from addObserverForKey
     update: function() {
       var self = this;
 
@@ -23,10 +30,6 @@ $(function() {
         self.draw();
       }, 1000);
     },
-
-    observeValueForKey: function(key, value) {
-      this.update();
-    }
   });
   DateView.property('time')
 
