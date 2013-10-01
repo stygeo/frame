@@ -5,6 +5,13 @@ $(function() {
   DateModel = Frame.Model.extend(['date']);
 
   DateView = Frame.View.extend({
+    events: {
+      'click' : 'onClick'
+    },
+    onClick: function() {
+      console.log('on click');
+    },
+
     constructor: function() {
       // Call super's constructor
       Frame.View.call(this);
@@ -33,6 +40,12 @@ $(function() {
         self.draw();
       }, 1000);
     },
+  });
+
+  var RemoveMeView = Frame.View.extend({
+    draw: function() {
+      this.$.html('i should have been removed');
+    }
   });
 
   DateViewController = Frame.ViewController.extend({
@@ -80,6 +93,10 @@ $(function() {
       };
 
       this.view.addSubview(canvasView);
+
+      var removeMeView = new RemoveMeView();
+      this.view.addSubview(removeMeView);
+      removeMeView.removeFromSuperview();
     }
   });
 

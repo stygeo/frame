@@ -270,10 +270,23 @@ $(function() {
   /*
    * Basic view
    */
+  function splitEventSelector(selectorEvent) {
+    var s = {};
+    if(selectorEvent.indexOf(' ') != -1) {
+      s.event = selectorEvent.substr(0, selectorEvent.indexOf(' ')),
+      s.selector = selectorEvent.substr(selectorEvent.indexOf(' ')+1)
+    } else {
+      s.event = selectorEvent;
+    }
+
+    return s;
+  }
+
   var View = BasicObject.extend({
     subviews: [],
     element: 'div',
 
+    // Basic view contstructor
     constructor: function(options) {
       if(!options) options = {};
 
@@ -282,11 +295,26 @@ $(function() {
 
       // Set the element of the controller
       this.el = options.el;
+
+      // Loop through the events if specified
+      if(this.events) {
+        for(var key in this.events) {
+          if(this.events.hasOwnProperty(key)) {
+            // Bind the event to the view (including any sub-queries)
+            // this.events[key] returns a function 'pointer' (key)
+            this.on(key, this[this.events[key]]);
+          }
+        }
+      }
     },
 
+    // Add a subview to the current view. Takes care of drawing the view.
     addSubview: function(subview) {
       // Add the subview to this view
       this.subviews.push(subview);
+
+      // Set this as the super view.
+      subview.superView = this;
 
       // Draw the view
       subview.draw();
@@ -294,12 +322,60 @@ $(function() {
       this.$.append(subview.$);
     },
 
-    draw: function() {
+    // Remove given view from this view. Takes care of unbinding
+    removeSubview: function(subview) {
+      // Get the index of the current view
+      var idx = this.subviews.indexOf(subview);
+      if(idx) {
+        var subview = this.subviews[idx];
+        delete this.subviews[idx];
+
+        subview.wasRemovedFromSuperView();
+      }
     },
+
+    // Easy function to remove a view of a super view
+    removeFromSuperview: function() {
+      if(this.superView) {
+        this.superView.removeSubview(this);
+      }
+    },
+
+    // On DOM event. Uses basic jQuery event handling.
+    on: function(event, callback) {
+      // Try and split events such as 'click #selector' and perform any find queries necessary.
+      var eventSelector = splitEventSelector(event);
+      if(eventSelector.selector) {
+        this.$.find(eventSelector.selector).on(eventSelector.event, callback);
+      } else {
+        this.$.on(eventSelector.event, callback);
+      }
+    },
+
+    // Remove DOM event.
+    off: function(event, callback) {
+      // Try and split events such as 'click #selector' and perform any find queries necessary.
+      var eventSelector = splitEventSelector(event);
+      if(eventSelector.selector) {
+        this.$.find(eventSelector.selector).off(eventSelector.event, callback);
+      } else {
+        this.$.off(eventSelector.event, callback);
+      }
+    },
+
+    // Function will be called when the view has been removed from the super view.
+    wasRemovedFromSuperView: function() {
+      // Remove from DOM
+      this.$.remove();
+    },
+
+    // Basic draw method. Should be overwritten for custom drawing
+    draw: function() {},
   });
   // Generic accessor for the view's element (either created or 'fetched').
   Object.defineProperty(View.prototype, "$", {
     get: function() {
+      // Get the bound element or create a new element.
       var element = this.el || '<'+this.element+'/>';
 
       if(!this.__collection) this.__collection = $(element);
