@@ -326,7 +326,7 @@ $(function() {
     removeSubview: function(subview) {
       // Get the index of the current view
       var idx = this.subviews.indexOf(subview);
-      if(idx) {
+      if(idx !== -1) {
         var subview = this.subviews[idx];
         delete this.subviews[idx];
 

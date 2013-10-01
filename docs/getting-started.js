@@ -42,11 +42,7 @@ $(function() {
     },
   });
 
-  var RemoveMeView = Frame.View.extend({
-    draw: function() {
-      this.$.html('i should have been removed');
-    }
-  });
+  var RemoveMeView = Frame.View.extend({draw: function() {this.$.html('i should have been removed');}});
 
   DateViewController = Frame.ViewController.extend({
     // If you want the root view (this.view) to latch to any existing element
