@@ -43,6 +43,22 @@ $(function() {
   });
 
   var RemoveMeView = Frame.View.extend({draw: function() {this.$.html('i should have been removed');}});
+  var AttachingView = Frame.View.extend({
+    events: {
+      'mousemove' : 'draw',
+      'click' : 'onclick'
+    },
+
+    draw: function(ev) {
+      if(!ev) ev = {};
+
+      var x = ev.clientX || 0, y = ev.clientY || 0;
+
+      this.$.html("Put your cursor in me: "+x+":"+y);
+    },
+
+    onclick: function(ev) { alert('You clicked #'+this.gid); },
+  });
 
   DateViewController = Frame.ViewController.extend({
     // If you want the root view (this.view) to latch to any existing element
@@ -58,7 +74,8 @@ $(function() {
 
     // Set up your view and load any content that needs to be displayed on the view.
     viewDidLoad: function() {
-      this.view.$.html('Hello world');
+      var template = 'Hello world <div id="attachable"></div>';
+      this.view.$.html(template);
 
       var dateView = new DateView();
       this.view.addSubview(dateView);
@@ -93,6 +110,21 @@ $(function() {
       var removeMeView = new RemoveMeView();
       this.view.addSubview(removeMeView);
       removeMeView.removeFromSuperview();
+
+      var attachingView = new AttachingView({el: '#attachable'});
+      this.view.addSubview(attachingView);
+
+      var helloButton = new Frame.Button({text: "Hello, press me."});
+      helloButton.on('click', function() {
+        alert("Oh, hello there, sir");
+      });
+      this.view.addSubview(helloButton);
+
+      var cancelButton = new Frame.Button({text: "Don't press me."});
+      cancelButton.on('click', function() {
+        alert("I told you not to press me");
+      });
+      this.view.addSubview(cancelButton);
     }
   });
 
@@ -109,7 +141,6 @@ $(function() {
 
     willTerminate: function() {
       // Called when the application terminates. (window close, navigation, etc.)
-      console.log("willTerminate");
     }
   });
 });

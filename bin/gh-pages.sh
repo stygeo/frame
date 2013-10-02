@@ -2,14 +2,14 @@
 
 git checkout master
 
-docco frame.js
+docco frame.core.js
 docco docs/getting-started.js
 git commit -am "Updated annonated source"
 
 rm -rf /tmp/frame
 cp -R docs/ /tmp/frame
-rm /tmp/frame/frame.js
-cp frame.js /tmp/frame/frame.js
+rm /tmp/frame/frame.core.js
+cp frame.core.js /tmp/frame/frame.core.js
 git checkout gh-pages
 
 rm -rf *
