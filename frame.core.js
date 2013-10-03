@@ -358,7 +358,8 @@ $(function() {
       var eventSelector = splitEventSelector(event);
       var callback = _.bind(cb, this);
       if(eventSelector.selector) {
-        this.$.find(eventSelector.selector).on(eventSelector.event, callback);
+        this.$.on(eventSelector.event, eventSelector.selector, callback);
+
       } else {
         this.$.on(eventSelector.event, callback);
       }
@@ -477,6 +478,16 @@ $(function() {
     viewWillLoad: function(){},
   });
 
+  /*
+   * Basic DataStore. All New datastores inherit from this object
+   */
+  var DataStore = BasicObject.extend({
+    open: function(name, callback, options) {},
+    add: function(object, options) {},
+    addByStoreName: function(storeName, data, options) {},
+    deleteByStoreName: function(storeName, id, options) {},
+    getAllByStoreName: function(storeName, options) {},
+  });
 
   /*
    * Application class, root of the application stack.
@@ -495,6 +506,9 @@ $(function() {
   Frame.View = View;
   Frame.CanvasView = CanvasView;
   Frame.Button = Button;
+
+  Frame.DataStore = DataStore;
+  Frame.dataStore = undefined;
 
   Frame.Application = Application;
 
