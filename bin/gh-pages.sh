@@ -14,6 +14,7 @@ git checkout gh-pages
 
 rm -rf *
 mv /tmp/frame/* .
+git add .
 git commit -am "Updates pages."
 git push
 
