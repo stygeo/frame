@@ -49,6 +49,13 @@
             <div class="content"><div class='highlight'><pre>  DateModel = Frame.Model.extend([<span class="string">'date'</span>]);
 
   DateView = Frame.View.extend({
+    events: {
+      <span class="string">'click'</span> : <span class="string">'onClick'</span>
+    },
+    onClick: <span class="keyword">function</span>() {
+      console.log(<span class="string">'on click'</span>);
+    },
+
     constructor: <span class="keyword">function</span>() {</pre></div></div>
             
         </li>
@@ -165,6 +172,24 @@
     },
   });
 
+  <span class="keyword">var</span> RemoveMeView = Frame.View.extend({draw: <span class="keyword">function</span>() {<span class="keyword">this</span>.$.html(<span class="string">'i should have been removed'</span>);}});
+  <span class="keyword">var</span> AttachingView = Frame.View.extend({
+    events: {
+      <span class="string">'mousemove'</span> : <span class="string">'draw'</span>,
+      <span class="string">'click'</span> : <span class="string">'onclick'</span>
+    },
+
+    draw: <span class="keyword">function</span>(ev) {
+      <span class="keyword">if</span>(!ev) ev = {};
+
+      <span class="keyword">var</span> x = ev.clientX || <span class="number">0</span>, y = ev.clientY || <span class="number">0</span>;
+
+      <span class="keyword">this</span>.$.html(<span class="string">"Put your cursor in me: "</span>+x+<span class="string">":"</span>+y);
+    },
+
+    onclick: <span class="keyword">function</span>(ev) { alert(<span class="string">'You clicked BasicObject#'</span>+<span class="keyword">this</span>.gid); },
+  });
+
   DateViewController = Frame.ViewController.extend({</pre></div></div>
             
         </li>
@@ -215,7 +240,8 @@ If no element with the specified attributes exists it creates a new DOM node.</p
             </div>
             
             <div class="content"><div class='highlight'><pre>    viewDidLoad: <span class="keyword">function</span>() {
-      <span class="keyword">this</span>.view.$.html(<span class="string">'Hello world'</span>);
+      <span class="keyword">var</span> template = <span class="string">'Hello world &lt;div id="attachable"&gt;&lt;/div&gt;'</span>;
+      <span class="keyword">this</span>.view.$.html(template);
 
       <span class="keyword">var</span> dateView = <span class="keyword">new</span> DateView();
       <span class="keyword">this</span>.view.addSubview(dateView);
@@ -271,6 +297,25 @@ If no element with the specified attributes exists it creates a new DOM node.</p
       };
 
       <span class="keyword">this</span>.view.addSubview(canvasView);
+
+      <span class="keyword">var</span> removeMeView = <span class="keyword">new</span> RemoveMeView();
+      <span class="keyword">this</span>.view.addSubview(removeMeView);
+      removeMeView.removeFromSuperview();
+
+      <span class="keyword">var</span> attachingView = <span class="keyword">new</span> AttachingView({el: <span class="string">'#attachable'</span>});
+      <span class="keyword">this</span>.view.addSubview(attachingView);
+
+      <span class="keyword">var</span> helloButton = <span class="keyword">new</span> Frame.Button({text: <span class="string">"Hello, press me."</span>});
+      helloButton.on(<span class="string">'click'</span>, <span class="keyword">function</span>() {
+        alert(<span class="string">"Oh, hello there, sir"</span>);
+      });
+      <span class="keyword">this</span>.view.addSubview(helloButton);
+
+      <span class="keyword">var</span> cancelButton = <span class="keyword">new</span> Frame.Button({text: <span class="string">"Don't press me."</span>});
+      cancelButton.on(<span class="string">'click'</span>, <span class="keyword">function</span>() {
+        alert(<span class="string">"I told you not to press me"</span>);
+      });
+      <span class="keyword">this</span>.view.addSubview(cancelButton);
     }
   });</pre></div></div>
             
@@ -336,8 +381,7 @@ If no element with the specified attributes exists it creates a new DOM node.</p
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      console.log(<span class="string">"willTerminate"</span>);
-    }
+            <div class="content"><div class='highlight'><pre>    }
   });
 });</pre></div></div>
             
