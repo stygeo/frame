@@ -57,7 +57,7 @@ $(function() {
       this.$.html("Put your cursor in me: "+x+":"+y);
     },
 
-    onclick: function(ev) { alert('You clicked #'+this.gid); },
+    onclick: function(ev) { alert('You clicked BasicObject#'+this.gid); },
   });
 
   DateViewController = Frame.ViewController.extend({

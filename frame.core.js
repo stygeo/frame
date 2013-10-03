@@ -317,7 +317,7 @@ $(function() {
     },
 
     // Add a subview to the current view. Takes care of drawing the view.
-    addSubview: function(subview) {
+    addSubview: function(subview, options) {
       // Add the subview to this view
       this.subviews.push(subview);
 
