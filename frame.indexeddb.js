@@ -1,7 +1,6 @@
 $(function() {
   if(!('Frame' in window)) throw Error("Frame not defined");
 
-  Frame.dataStore = undefined;
   Frame.storeDefinition = undefined;
 
   // Define indexeddb
@@ -17,7 +16,7 @@ $(function() {
     console.log(e);
   };
 
-  var Store = Frame.BasicObject.extend({
+  var Store = Frame.DataStore.extend({
     constructor: function(options) {
       this.db = null;
     },
@@ -107,7 +106,9 @@ $(function() {
       };
     },
 
-    getAllByStoreName: function(storeName, callback) {
+    getAllByStoreName: function(storeName, options) {
+      if(!options) options = {};
+
       var db = this.db;
       var trans = db.transaction([storeName], "readwrite");
       var store = trans.objectStore(storeName);
@@ -120,8 +121,8 @@ $(function() {
         if(!!result == false)
           return;
 
-        if(callback) {
-          callback(result.value, e.target.result, e);
+        if(options.success) {
+          options.success(result.value, e.target.result, e);
         }
 
         // Should the callback take care of this?
