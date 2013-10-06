@@ -445,10 +445,14 @@ $(function() {
    * Controllers
    */
 
-  var ViewController = BasicObject.extend({
-    // The root view of this controller.
-    view: undefined,
-
+  var ViewController = BasicObject.extend(
+    [
+      // The root view of this controller.
+      'view',
+      // Child view controllers
+      'viewControllers',
+      // Parent view controller or undefined
+      'parentViewController'], {
     constructor: function(options) {
       if(!options) options = {};
 
@@ -456,6 +460,8 @@ $(function() {
       BasicObject.call(this, options);
 
       this.el = options.el;
+      this.viewControllers = [];
+      this.parentViewController
     },
 
     loadView: function() {
@@ -470,6 +476,37 @@ $(function() {
 
       // Return the view so that who ever called this function can add the DOM Nodes.
       return this.view;
+    },
+
+    // Add a child view controller. This method will take care of calling
+    // the appropriate methods to load the child controllers view.
+    addChildViewController: function(controller) {
+      if(controller.parentViewController) {
+        controller.removeFromParentViewController();
+      }
+
+      this.viewControllers.push(controller);
+
+      // Set this as the parent view controller
+      controller.parentViewController = this;
+
+      // Load the view of the child view controller
+      controller.loadView();
+    },
+
+    // Remove a child view controller from the stack
+    removeChildViewController: function(controller) {
+      var idx = this.viewControllers.indexOf(controller);
+      if(idx != -1) {
+        delete this.viewControllers[idx];
+        controller.parentViewController = undefined;
+      }
+    },
+
+    removeFromParentViewController: function() {
+      if(this.parentViewController) {
+        this.parentViewController.removeChildViewController(this);
+      }
     },
 
     // Will be called when the view is done loading and is set up.
