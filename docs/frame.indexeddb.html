@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>frame.indexeddb.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>frame.indexeddb.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>$(<span class="keyword">function</span>() {
+  <span class="keyword">if</span>(!(<span class="string">'Frame'</span> <span class="keyword">in</span> window)) <span class="keyword">throw</span> Error(<span class="string">"Frame not defined"</span>);
+
+  Frame.storeDefinition = <span class="literal">undefined</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Define indexeddb</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  window.indexedDB = window.indexedDB || window.webkitIndexedDB ||
+    window.mozIndexedDB;
+  <span class="keyword">if</span> (<span class="string">'webkitIndexedDB'</span> <span class="keyword">in</span> window) {
+    window.IDBTransaction = window.webkitIDBTransaction;
+    window.IDBKeyRange = window.webkitIDBKeyRange;
+  }
+
+  <span class="keyword">var</span> IndexedDB = {};
+  IndexedDB.onerror = <span class="keyword">function</span>(e) {
+    console.log(e);
+  };
+
+  <span class="keyword">var</span> Store = Frame.DataStore.extend({
+    constructor: <span class="keyword">function</span>(options) {
+      <span class="keyword">this</span>.db = <span class="literal">null</span>;
+    },
+
+    open: <span class="keyword">function</span>(name, callback, options) {
+      <span class="keyword">if</span>(!options) options = {};
+
+      <span class="keyword">var</span> version = options.version || <span class="number">3</span>;
+      <span class="keyword">var</span> request = indexedDB.open(name, version);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>We can only create Object stores in a version change transaction.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      request.onupgradeneeded = <span class="keyword">function</span>(e) {
+        <span class="keyword">var</span> db = e.target.result;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>A version change transaction is started automatically.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        e.target.transaction.onerror = IndexedDB.onerror;
+
+        <span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; Frame.storeDefinition.length; i++) {
+          <span class="keyword">var</span> storeName = Frame.storeDefinition[i].storeName;
+
+          <span class="keyword">if</span>(db.objectStoreNames.contains(storeName)) {
+            db.deleteObjectStore(storeName);
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Create a new object store for the given store name</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="keyword">var</span> store = db.createObjectStore(storeName, {keyPath: <span class="string">"id"</span>, autoIncrement: <span class="literal">true</span>});
+        }
+      };
+
+      <span class="keyword">var</span> $<span class="keyword">this</span> = <span class="keyword">this</span>;
+      request.onsuccess = <span class="keyword">function</span>(e) {
+        $<span class="keyword">this</span>.db = e.target.result;
+        <span class="keyword">if</span>(callback) {
+          callback(e);
+        }
+      };
+
+      request.onerror = IndexedDB.onerror;
+    },
+
+    add: <span class="keyword">function</span>(object, options) {
+      <span class="keyword">if</span>(!options) options = {};
+
+      <span class="keyword">var</span> serializedData = object.toJSON();
+      <span class="keyword">this</span>.addByStoreName(object.objectName, serializedData, options);
+    },
+
+    addByStoreName: <span class="keyword">function</span>(storeName, data, options) {
+      <span class="keyword">if</span>(!options) options = {};
+
+      <span class="keyword">var</span> db = <span class="keyword">this</span>.db;
+      <span class="keyword">var</span> trans = db.transaction([storeName], <span class="string">"readwrite"</span>);
+      <span class="keyword">var</span> store = trans.objectStore(storeName);
+
+      <span class="keyword">if</span>(!(<span class="string">'createdAt'</span> <span class="keyword">in</span> data)) data.createdAt = <span class="keyword">new</span> Date();
+
+      <span class="keyword">var</span> request = store.put(data);
+
+      request.onsuccess = <span class="keyword">function</span>(e) {
+        <span class="keyword">if</span>(options.success) {
+          options.success(request, e.target.result, e);
+        }
+      };
+
+      request.onerror = <span class="keyword">function</span>(e) {
+        console.log(<span class="string">"Error Adding: "</span>, e);
+      };
+    },
+
+    deleteByStoreName: <span class="keyword">function</span>(storeName, id, options) {
+      <span class="keyword">if</span>(!options) options = {};
+
+      <span class="keyword">var</span> db = <span class="keyword">this</span>.db;
+      <span class="keyword">var</span> trans = db.transaction([storeName], <span class="string">"readwrite"</span>);
+      <span class="keyword">var</span> store = trans.objectStore(storeName);
+
+      <span class="keyword">var</span> request = store.<span class="keyword">delete</span>(id);
+
+      request.onsuccess = <span class="keyword">function</span>(e) {
+        <span class="keyword">if</span>(options.success) {
+          options.success(e);
+        }
+      };
+
+      request.onerror = <span class="keyword">function</span>(e) {
+        console.log(<span class="string">"Error Adding: "</span>, e);
+      };
+    },
+
+    getAllByStoreName: <span class="keyword">function</span>(storeName, options) {
+      <span class="keyword">if</span>(!options) options = {};
+
+      <span class="keyword">var</span> db = <span class="keyword">this</span>.db;
+      <span class="keyword">var</span> trans = db.transaction([storeName], <span class="string">"readwrite"</span>);
+      <span class="keyword">var</span> store = trans.objectStore(storeName);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Get everything in the store;</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">var</span> cursorRequest = store.openCursor();
+
+      cursorRequest.onsuccess = <span class="keyword">function</span>(e) {
+        <span class="keyword">var</span> result = e.target.result;
+        <span class="keyword">if</span>(!!result == <span class="literal">false</span>)
+          <span class="keyword">return</span>;
+
+        <span class="keyword">if</span>(options.success) {
+          options.success(result.value, e.target.result, e);
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>Should the callback take care of this?</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        result.<span class="keyword">continue</span>();
+      };
+
+      cursorRequest.onerror = IndexedDB.onerror;
+    },
+  });
+
+  Frame.IndexedStore = Store;
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>
