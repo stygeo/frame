@@ -515,6 +515,7 @@ $(function() {
     viewWillLoad: function(){},
   });
 
+
   /*
    * Basic DataStore. All New datastores inherit from this object
    */
@@ -539,10 +540,13 @@ $(function() {
   // Objects
   Frame.BasicObject = BasicObject;
   Frame.Model = Model;
-  Frame.ViewController = ViewController;
+
+  // Views
   Frame.View = View;
   Frame.CanvasView = CanvasView;
   Frame.Button = Button;
+  // Controllers
+  Frame.ViewController = ViewController;
 
   Frame.DataStore = DataStore;
   Frame.dataStore = undefined;

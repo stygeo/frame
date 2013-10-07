@@ -61,7 +61,7 @@
       <a class="item" href="https://github.com/stygeo/frame">Github page</a>
       <a class="item" href="frame.core.html">Annonated source</a>
       <a class="item" href="#getting-started">Getting started</a>
-      <a class="item" href="getting-started.html">Annonated example</a>
+      <a class="item" href="examples/index.html">Examples</a>
     </div>
   </div>
   <div class="item">
@@ -151,6 +151,32 @@ Frame.application = Frame.Application.extend({
   <p>
   Every view has a special <code>$</code> attribute. This is the jQuery selector for your current view. Like in the example doing <code>this.$.html("Hello world")</code> will render "Hello world" to
   the view.
+  </p>
+
+  <p>
+  As your application grows you'll notice that you'll be needing more than just one controller. Within frame you can add <strong>child view controllers</strong> to any
+  view controller with <code>addChildViewConroller</code>. This method will take care of calling <code>loadView</code> on the child view controller so the views of 
+  that controller can initialize.
+  </p>
+  <p>Adding them is fairly straight forward. Let's assume the above book view controller and we'd like to add a search view controller:</p>
+  <pre><code class="javascript">viewDidLoad: function() {
+  // Add subviews, events, etc
+  var myView = new MyView();
+  this.view.addSubview(myView);
+
+  // Add the search view controller
+  var searchViewController = new MySearchViewController(); // Binding to elements can still be done with the el option.
+  // Add child controller
+  this.addChildViewController(searchViewController);
+  // Add the controllers view as subview
+  this.view.addSubview(searchViewController.view);
+}</code></pre>
+
+  <p>
+  As you can see Frame tries to do as much as trivial work for you as possible, however, view hierarchy needs be done manually. Frame doesn't know where you want to add
+  your views and to which subview so even after adding the controller as a child controller, views still need to be added manually.
+  <p>
+  <p>If you'd like to see more example, please check out the <a href="examples/index.html">live examples</a> or check the <a href="http://github.com/stygeo/frame/tree/master/examples">code</a></p>
 
   <div class="ui divider"></div>
 
