@@ -69,10 +69,13 @@ $(function() {
 
     // Set the prototype chain to inherit from `parent`, without calling
     // `parent`'s constructor function.
-    var Surrogate = function(){ this.constructor = child; };
+    var Surrogate = function() { this.constructor = child; };
+
     Surrogate.prototype = parent.prototype;
     // Copy over static methods
     child.prototype = new Surrogate;
+    child.prototype.Class = child;
+
     if (protoProps) _.extend(child.prototype, protoProps);
 
     // Copy over static methods
@@ -93,15 +96,94 @@ $(function() {
     return child;
   };
 
+  var Construct = function(){};
+  Construct.extend = __extend;
+
   // Basic low level object. Contains most low level object functions such as KVO & KVC.
-  var BasicObject = function(options) {
-    /* These values are not meant to be KVO. */
-    // Determines whether this object is a basic object so you can distinguish them from regular objects.
-    this.basicObjectDefined=true
-    // The current id of the object
-    this.gid = __gid();
-  };
-  BasicObject.extend = __extend;
+  var BasicObject = Construct.extend({
+    constructor: function(options) {
+      /* These values are not meant to be KVO. */
+      // Determines whether this object is a basic object so you can distinguish them from regular objects.
+      this.basicObjectDefined=true
+      // The current id of the object
+      this.gid = __gid();
+    },
+
+    properties: function() {
+      return this._properties || (this._properties = {})
+    },
+
+    observers: function() {
+      return this._observers || (this._observers = {})
+    },
+
+    // Specialized setter. Calls callbacks on observed values
+    setProperty: function(key, value) {
+      this.properties()[key] = value
+
+      if(this.observers[key] && this.observers[key].length > 0) {
+        for(var i = 0; i < this.observers[key].length; i++) {
+          var observer = this.observers[key][i]
+          if(observer !== undefined) {
+            // Signal the observer or call the callback
+            if($.isFunction(observer)) {
+              observer.call(this, key, value);
+            } else {
+              observer.observeValueForKey.call(observer, key, value)
+            }
+          }
+        }
+      }
+    },
+
+    // Basic object getter
+    getProperty: function(key) {
+      return this.properties()[key]
+    },
+
+    // Returns the given or sets the given key with value (Key Value Coding, KVC)
+    valueForKey: function(value_or_key, key) {
+      if(key === undefined) {
+        return this.getProperty(value_or_key)
+      }
+
+      this.setProperty(key, value_or_key)
+    },
+
+    // Observe the given key. (Key Value Observing, KVO)
+    addObserverForKey: function(observerOrKey, keyOrCallback, options) {
+      var observer, key;
+      if(__isString(observerOrKey) && $.isFunction(keyOrCallback)) {
+        observer = keyOrCallback;
+        key = observerOrKey;
+      } else {
+        observer = observerOrKey;
+        key = keyOrCallback;
+      }
+
+      if(this.observers[key] === undefined) {
+        this.observers[key] = []
+      }
+
+      this.observers[key].push(observer)
+    },
+
+    // Remove the given observer with the specified key
+    removeObserverForKey: function(observer, key) {
+      if(this.observers[key]) {
+        for(var i = 0; i < this.observers[key].length; i++) {
+          if(this.observers[key][i] === observer) {
+            delete this.observers[key][i]
+            break
+          }
+        }
+      }
+    },
+
+    isKindOfClass: function(klass) {
+      return this.Class == klass;
+    },
+  });
 
   // Public property setter. Creates specialized properties which can be accessed through KVC and make use of KVO
   BasicObject.property = function(propertyNames) {
@@ -124,76 +206,6 @@ $(function() {
     }
   }
 
-  BasicObject.prototype.properties = function() {
-    return this._properties || (this._properties = {})
-  }
-  BasicObject.prototype.observers = function() {
-    return this._observers || (this._observers = {})
-  }
-
-
-  // Specialized setter. Calls callbacks on observed values
-  BasicObject.prototype.setProperty = function(key, value) {
-    this.properties()[key] = value
-
-    if(this.observers[key] && this.observers[key].length > 0) {
-      for(var i = 0; i < this.observers[key].length; i++) {
-        var observer = this.observers[key][i]
-        if(observer !== undefined) {
-          // Signal the observer or call the callback
-          if($.isFunction(observer)) {
-            observer.call(this, key, value);
-          } else {
-            observer.observeValueForKey.call(observer, key, value)
-          }
-        }
-      }
-    }
-  }
-
-  // Basic object getter
-  BasicObject.prototype.getProperty = function(key) {
-    return this.properties()[key]
-  }
-
-  // Returns the given or sets the given key with value (Key Value Coding, KVC)
-  BasicObject.prototype.valueForKey = function(value_or_key, key) {
-    if(key === undefined) {
-      return this.getProperty(value_or_key)
-    }
-
-    this.setProperty(key, value_or_key)
-  }
-
-  // Observe the given key. (Key Value Observing, KVO)
-  BasicObject.prototype.addObserverForKey = function(observerOrKey, keyOrCallback, options) {
-    var observer, key;
-    if(__isString(observerOrKey) && $.isFunction(keyOrCallback)) {
-      observer = keyOrCallback;
-      key = observerOrKey;
-    } else {
-      observer = observerOrKey;
-      key = keyOrCallback;
-    }
-
-    if(this.observers[key] === undefined) {
-      this.observers[key] = []
-    }
-
-    this.observers[key].push(observer)
-  }
-
-  // Remove the given observer with the specified key
-  BasicObject.prototype.removeObserverForKey = function(observer, key) {
-    if(this.observers[key]) {
-      for(var i = 0; i < this.observers[key].length; i++) {
-        if(this.observers[key][i] === observer) {
-          delete this.observers[key][i]
-          break
-        }
-      }
-    }
-  }
 
   /*
    * Frame.Model data object.
