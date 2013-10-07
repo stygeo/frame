@@ -6,14 +6,25 @@ $(function() {
 
   var TodoItemView = Frame.View.extend({
     element: 'li',
+
     constructor: function(options) {
       Frame.View.call(this, options);
 
       this.todoItem = options.todoItem;
+
+      this.deleteButton = new Frame.Button({text: "Delete"});
+      this.deleteButton.on('click', _.bind(this.deleteTodoItem, this));
     },
 
     draw: function() {
       this.$.html(this.todoItem.title);
+      this.addSubview(this.deleteButton);
+    },
+
+    deleteTodoItem: function(e) {
+      this.todoItem.destroy();
+
+      this.removeFromSuperview();
     },
   });
 
@@ -34,7 +45,6 @@ $(function() {
       var $this = this;
       todoItem.save([], {
         success: function(a,b,c) {
-          console.log("Created new item");
           $this.delegate.createdItem(todoItem);
         }
       });
@@ -62,7 +72,7 @@ $(function() {
         store.getAllByStoreName('todo', {
           success: function(data) {
             var todoItem = new TodoItem(data);
-            var todoItemView = new TodoItemView({todoItem: todoItem});
+            var todoItemView = new TodoItemView({todoItem: todoItem, cssClass: 'ui list todo-item'});
 
             $this.view.addSubview(todoItemView);
           }
@@ -72,7 +82,7 @@ $(function() {
 
     // Called by NewTodoItemView as delegate
     createdItem: function(todoItem) {
-      var todoItemView = new TodoItemView({todoItem: todoItem});
+      var todoItemView = new TodoItemView({todoItem: todoItem, cssClass: 'ui list todo-item'});
 
       this.view.addSubview(todoItemView);
     },
