@@ -13,3 +13,32 @@ with the overall API design. Please refer to the documentation (which
 might be outdated!) or check out the samples (always up to date!).
 
 Documentation / official page can be found at https://stygeo.github.io/frame
+
+## CODE PLOX
+
+If you like sample code here's a very basic sample application in
+frame.js which should give you a rough impression.
+
+```javascript
+var MyView = Frame.View.extend({
+  // Define a custom draw method
+  draw: function() {
+    this.$.html("Hello world");
+  }
+});
+
+// Define the view controller
+var ExampleViewController = new Frame.ViewController({
+  viewDidLoad: function() {
+    // Add subviews, events, etc.
+    var myView = new MyView();
+    this.view.addSubview(myView);
+  }
+});
+
+Frame.application = Frame.Application.extend({
+  didFinishLaunching: function() {
+    this.rootViewController = new ExampleViewController();
+  }
+});
+```
