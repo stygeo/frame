@@ -4,7 +4,7 @@ git checkout master
 
 docco frame.core.js
 docco frame.indexeddb.js
-docco frome.webgl.js
+docco frame.webgl.js
 git add .
 git commit -am "Updated annonated source"
 
