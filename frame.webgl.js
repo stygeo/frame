@@ -1,7 +1,7 @@
 $(function() {
   if(!('Frame' in window)) { throw new Error("Included frame.glkit but Frame is undefined"); }
 
-  requestAnimationFrame = (function(callback) {
+  var requestAnimationFrame = (function(callback) {
     return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
       function(callback) {
       window.setTimeout(callback, 1000 / 60);
