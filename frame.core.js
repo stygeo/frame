@@ -211,6 +211,8 @@ $(function() {
       this.serialize(attributes);
 
     },
+
+    // TODO use data store
     // Load data from the remote source
     fetch: function(parameters, options) {
       $this = this;
@@ -236,6 +238,10 @@ $(function() {
       } else {
         // TODO
       }
+    },
+
+    destroy: function(options) {
+      Frame.dataStore.destroy(this, options);
     },
 
     serialize: function(serializableAttributes) {
@@ -303,6 +309,8 @@ $(function() {
 
       // Set the element of the controller
       this.el = options.el;
+      // Set the CSS classes
+      this.cssClass = options.cssClass;
 
       // Loop through the events if specified
       if(this.events) {
@@ -388,11 +396,17 @@ $(function() {
   });
   // Generic accessor for the view's element (either created or 'fetched').
   Object.defineProperty(View.prototype, "$", {
+    enumerable: true,
+
     get: function() {
       // Get the bound element or create a new element.
       var element = this.el || '<'+this.element+'/>';
 
-      if(!this.__collection) this.__collection = $(element);
+      if(!this.__collection) {
+        this.__collection = $(element);
+        // Add classes set this view cssClass attribute.
+        this.__collection.addClass(this.cssClass);
+      }
 
       return this.__collection;
     }

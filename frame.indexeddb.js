@@ -64,6 +64,12 @@ $(function() {
       this.addByStoreName(object.objectName, serializedData, options);
     },
 
+    destroy: function(object, options) {
+      if(!options) options = {};
+
+      this.destroyByStoreName(object.objectName, object.id, options);
+    },
+
     addByStoreName: function(storeName, data, options) {
       if(!options) options = {};
 
@@ -86,7 +92,7 @@ $(function() {
       };
     },
 
-    deleteByStoreName: function(storeName, id, options) {
+    destroyByStoreName: function(storeName, id, options) {
       if(!options) options = {};
 
       var db = this.db;
@@ -102,7 +108,7 @@ $(function() {
       };
 
       request.onerror = function(e) {
-        console.log("Error Adding: ", e);
+        console.log("Error Removing: ", e);
       };
     },
 
