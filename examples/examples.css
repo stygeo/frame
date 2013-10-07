@@ -1,0 +1,13 @@
+/* Basic reset */
+html, body {
+  margin:0;padding:0;
+}
+body {
+  padding: 20px;
+  font-family: 'Open Sans';
+  -webkit-font-smoothing: antialiased;
+}
+
+div {
+  margin: 5px 0;
+}

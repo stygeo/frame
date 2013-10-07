@@ -1209,7 +1209,8 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
    * Controllers
    */</span>
 
-  <span class="keyword">var</span> ViewController = BasicObject.extend({</pre></div></div>
+  <span class="keyword">var</span> ViewController = BasicObject.extend(
+    [</pre></div></div>
             
         </li>
         
@@ -1224,10 +1225,7 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    view: <span class="literal">undefined</span>,
-
-    constructor: <span class="keyword">function</span>(options) {
-      <span class="keyword">if</span>(!options) options = {};</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="string">'view'</span>,</pre></div></div>
             
         </li>
         
@@ -1238,16 +1236,11 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-62">&#182;</a>
               </div>
-              <p>Call the basic object&#39;s constructor.</p>
+              <p>Child view controllers</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      BasicObject.call(<span class="keyword">this</span>, options);
-
-      <span class="keyword">this</span>.el = options.el;
-    },
-
-    loadView: <span class="keyword">function</span>() {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="string">'viewControllers'</span>,</pre></div></div>
             
         </li>
         
@@ -1258,11 +1251,13 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-63">&#182;</a>
               </div>
-              <p>Notify the inherited controller that the view is about to be loaded.</p>
+              <p>Parent view controller or undefined</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.viewWillLoad();</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="string">'parentViewController'</span>], {
+    constructor: <span class="keyword">function</span>(options) {
+      <span class="keyword">if</span>(!options) options = {};</pre></div></div>
             
         </li>
         
@@ -1273,11 +1268,18 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-64">&#182;</a>
               </div>
-              <p>Create a new View and pass it the el (el may be undefined)</p>
+              <p>Call the basic object&#39;s constructor.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.view = <span class="keyword">new</span> View({el: <span class="keyword">this</span>.el});</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      BasicObject.call(<span class="keyword">this</span>, options);
+
+      <span class="keyword">this</span>.el = options.el;
+      <span class="keyword">this</span>.viewControllers = [];
+      <span class="keyword">this</span>.parentViewController
+    },
+
+    loadView: <span class="keyword">function</span>() {</pre></div></div>
             
         </li>
         
@@ -1288,11 +1290,11 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-65">&#182;</a>
               </div>
-              <p>Notify the inherited controller that the view has been loaded and is ready.</p>
+              <p>Notify the inherited controller that the view is about to be loaded.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.viewDidLoad();</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.viewWillLoad();</pre></div></div>
             
         </li>
         
@@ -1302,6 +1304,36 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-66">&#182;</a>
+              </div>
+              <p>Create a new View and pass it the el (el may be undefined)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.view = <span class="keyword">new</span> View({el: <span class="keyword">this</span>.el});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-67">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-67">&#182;</a>
+              </div>
+              <p>Notify the inherited controller that the view has been loaded and is ready.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">this</span>.viewDidLoad();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-68">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-68">&#182;</a>
               </div>
               <p>Return the view so that who ever called this function can add the DOM Nodes.</p>
 
@@ -1313,11 +1345,90 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
         </li>
         
         
-        <li id="section-67">
+        <li id="section-69">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-67">&#182;</a>
+                <a class="pilcrow" href="#section-69">&#182;</a>
+              </div>
+              <p>Add a child view controller. This method will take care of calling
+the appropriate methods to load the child controllers view.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    addChildViewController: <span class="keyword">function</span>(controller) {
+      <span class="keyword">if</span>(controller.parentViewController) {
+        controller.removeFromParentViewController();
+      }
+
+      <span class="keyword">this</span>.viewControllers.push(controller);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-70">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-70">&#182;</a>
+              </div>
+              <p>Set this as the parent view controller</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      controller.parentViewController = <span class="keyword">this</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-71">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-71">&#182;</a>
+              </div>
+              <p>Load the view of the child view controller</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      controller.loadView();
+    },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-72">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-72">&#182;</a>
+              </div>
+              <p>Remove a child view controller from the stack</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    removeChildViewController: <span class="keyword">function</span>(controller) {
+      <span class="keyword">var</span> idx = <span class="keyword">this</span>.viewControllers.indexOf(controller);
+      <span class="keyword">if</span>(idx != -<span class="number">1</span>) {
+        <span class="keyword">delete</span> <span class="keyword">this</span>.viewControllers[idx];
+        controller.parentViewController = <span class="literal">undefined</span>;
+      }
+    },
+
+    removeFromParentViewController: <span class="keyword">function</span>() {
+      <span class="keyword">if</span>(<span class="keyword">this</span>.parentViewController) {
+        <span class="keyword">this</span>.parentViewController.removeChildViewController(<span class="keyword">this</span>);
+      }
+    },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-73">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-73">&#182;</a>
               </div>
               <p>Will be called when the view is done loading and is set up.</p>
 
@@ -1328,11 +1439,11 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
         </li>
         
         
-        <li id="section-68">
+        <li id="section-74">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-68">&#182;</a>
+                <a class="pilcrow" href="#section-74">&#182;</a>
               </div>
               <p>Will be called before any view loading is done.</p>
 
@@ -1340,6 +1451,7 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
             
             <div class="content"><div class='highlight'><pre>    viewWillLoad: <span class="keyword">function</span>(){},
   });
+
 
   <span class="comment">/*
    * Basic DataStore. All New datastores inherit from this object
@@ -1365,22 +1477,50 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
         </li>
         
         
-        <li id="section-69">
+        <li id="section-75">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-69">&#182;</a>
+                <a class="pilcrow" href="#section-75">&#182;</a>
               </div>
               <p>Objects</p>
 
             </div>
             
             <div class="content"><div class='highlight'><pre>  Frame.BasicObject = BasicObject;
-  Frame.Model = Model;
-  Frame.ViewController = ViewController;
-  Frame.View = View;
+  Frame.Model = Model;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-76">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-76">&#182;</a>
+              </div>
+              <p>Views</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  Frame.View = View;
   Frame.CanvasView = CanvasView;
-  Frame.Button = Button;
+  Frame.Button = Button;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-77">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-77">&#182;</a>
+              </div>
+              <p>Controllers</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  Frame.ViewController = ViewController;
 
   Frame.DataStore = DataStore;
   Frame.dataStore = <span class="literal">undefined</span>;
@@ -1390,11 +1530,11 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
         </li>
         
         
-        <li id="section-70">
+        <li id="section-78">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-70">&#182;</a>
+                <a class="pilcrow" href="#section-78">&#182;</a>
               </div>
               <p>Methods</p>
 
@@ -1419,11 +1559,11 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
         </li>
         
         
-        <li id="section-71">
+        <li id="section-79">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-71">&#182;</a>
+                <a class="pilcrow" href="#section-79">&#182;</a>
               </div>
               <p>Create a new application instance from the given application class.</p>
 
@@ -1434,11 +1574,11 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
         </li>
         
         
-        <li id="section-72">
+        <li id="section-80">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-72">&#182;</a>
+                <a class="pilcrow" href="#section-80">&#182;</a>
               </div>
               <p>Set Frame&#39;s application instance.</p>
 
@@ -1451,11 +1591,11 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
         </li>
         
         
-        <li id="section-73">
+        <li id="section-81">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-73">&#182;</a>
+                <a class="pilcrow" href="#section-81">&#182;</a>
               </div>
               <p>If a rootViewController is set call the conrollers loadView method</p>
 
@@ -1466,11 +1606,11 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
         </li>
         
         
-        <li id="section-74">
+        <li id="section-82">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-74">&#182;</a>
+                <a class="pilcrow" href="#section-82">&#182;</a>
               </div>
               <p>Set the body if no element has been set on the root controller.</p>
 
@@ -1481,11 +1621,11 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
         </li>
         
         
-        <li id="section-75">
+        <li id="section-83">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-75">&#182;</a>
+                <a class="pilcrow" href="#section-83">&#182;</a>
               </div>
               <p>Load the view and draw it</p>
 
@@ -1498,11 +1638,11 @@ this.events[key] returns a function &#39;pointer&#39; (key)</p>
         </li>
         
         
-        <li id="section-76">
+        <li id="section-84">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-76">&#182;</a>
+                <a class="pilcrow" href="#section-84">&#182;</a>
               </div>
               <p>Set up the terminate callback</p>
 
