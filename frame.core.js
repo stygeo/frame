@@ -563,6 +563,9 @@ $(function() {
     willTerminate: function(){}
   });
 
+  // Frame configuration options.
+  Frame.config = {};
+
   // Objects
   Frame.BasicObject = BasicObject;
   Frame.Model = Model;
@@ -588,6 +591,38 @@ $(function() {
   Frame.gid = __gid;
 
   /*
+   * Frame (private) boot strap functions
+   */
+
+  function BootstrapDatabase(onReady) {
+    if(Frame.config.db) {
+      var db = Frame.config.db;
+
+      // Indexeddb store
+      if(db.type === 'Frame.IndexedStore') {
+        // Initialize the data store
+        var store = new Frame.IndexedStore();
+        // Set the default store
+        Frame.defaultStore = store;
+        // Set the definition
+        Frame.defaultStore.definition = db.definition;
+
+        // Open database and call the onReady when ever it's done.
+        store.open(db.name, onReady);
+      } else if(false) {
+
+      }
+    } else { /* If no database continue initializing */
+      onReady();
+    }
+  }
+
+  function FrameBootstrapFramework(options) {
+    // Bootstrap database (if any)
+    BootstrapDatabase(options.onReady);
+  }
+
+  /*
    * Define the application accessor.
    * Once the application property is set it will use it to create
    * a new instance of that object and uses that as the root of your application.
@@ -601,17 +636,21 @@ $(function() {
       // Set Frame's application instance.
       this.applicationInstance = app;
 
-      app.didFinishLaunching();
+      FrameBootstrapFramework({
+        onReady: function() {
+          app.didFinishLaunching();
 
-      // If a rootViewController is set call the conrollers loadView method
-      if(app.rootViewController) {
-        // Set the body if no element has been set on the root controller.
-        if(!app.rootViewController.el) app.rootViewController.el = 'body';
+          // If a rootViewController is set call the conrollers loadView method
+          if(app.rootViewController) {
+            // Set the body if no element has been set on the root controller.
+            if(!app.rootViewController.el) app.rootViewController.el = 'body';
 
-        // Load the view and draw it
-        var view = app.rootViewController.loadView();
-        view.draw();
-      }
+            // Load the view and draw it
+            var view = app.rootViewController.loadView();
+            view.draw();
+          }
+        }
+      });
 
       // Set up the terminate callback
       $(window).on('beforeunload', function() {
@@ -619,6 +658,7 @@ $(function() {
       });
     },
   });
+
 
   window.Frame = Frame;
 });

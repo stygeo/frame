@@ -4,8 +4,7 @@ $(function() {
   Frame.storeDefinition = undefined;
 
   // Define indexeddb
-  window.indexedDB = window.indexedDB || window.webkitIndexedDB ||
-    window.mozIndexedDB;
+  window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
   if ('webkitIndexedDB' in window) {
     window.IDBTransaction = window.webkitIDBTransaction;
     window.IDBKeyRange = window.webkitIDBKeyRange;
@@ -34,15 +33,16 @@ $(function() {
         // A version change transaction is started automatically.
         e.target.transaction.onerror = IndexedDB.onerror;
 
-        for(var i = 0; i < Frame.storeDefinition.length; i++) {
-          var storeName = Frame.storeDefinition[i].storeName;
+        for(var key in this.definition) {
+          var storeName = key;
+          var storeDefinition = this.definition[key];
 
-          if(db.objectStoreNames.contains(storeName)) {
+          if(db.objectStoreNames.containts(storeName)) {
             db.deleteObjectStore(storeName);
           }
 
           // Create a new object store for the given store name
-          var store = db.createObjectStore(storeName, {keyPath: "id", autoIncrement: true});
+          var store = db.createObjectStore(storeName, storeDefinition);
         }
       };
 
