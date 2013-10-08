@@ -1,7 +1,4 @@
 $(function() {
-  // Define out store
-  Frame.storeDefinition = [{storeName: 'todo'}];
-
   var TodoItem = Frame.Model.extend(['title'], {objectName: 'todo'});
 
   var TodoItemView = Frame.View.extend({
@@ -60,23 +57,21 @@ $(function() {
     },
 
     viewDidLoad: function() {
-      var store = this.store;
-      var $this = this;
+      var store = Frame.defaultStore,
+          $this = this,
+          newTodoItemView = new NewTodoItemView();
 
-      var newTodoItemView = new NewTodoItemView();
       newTodoItemView.delegate = this;
 
       this.view.addSubview(newTodoItemView);
 
-      store.open('todo', function() {
-        store.getAllByStoreName('todo', {
-          success: function(data) {
-            var todoItem = new TodoItem(data);
-            var todoItemView = new TodoItemView({todoItem: todoItem, cssClass: 'ui list todo-item'});
+      store.getAllByStoreName('todo', {
+        success: function(data) {
+          var todoItem = new TodoItem(data);
+          var todoItemView = new TodoItemView({todoItem: todoItem, cssClass: 'ui list todo-item'});
 
-            $this.view.addSubview(todoItemView);
-          }
-        })
+          $this.view.addSubview(todoItemView);
+        }
       })
     },
 
@@ -87,6 +82,16 @@ $(function() {
       this.view.addSubview(todoItemView);
     },
   });
+
+  /* Normally you'd place this else where */
+  // Frame database configuration
+  Frame.config.db = {
+    type: 'Frame.IndexedStore',
+    name: 'todo',
+    definition: {
+      'todo': {keyPath: 'id', autoIncrement: true},
+    }
+  };
 
   Frame.application = Frame.Application.extend({
     didFinishLaunching: function() {
