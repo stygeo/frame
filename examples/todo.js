@@ -1,5 +1,7 @@
 $(function() {
-  var TodoItem = Frame.Model.extend(['title'], {objectName: 'todo'});
+  var TodoItem = Frame.Model.extend({objectName: 'todo'});
+  console.log(new TodoItem({title: 'test'}));
+  var FuckItem = Frame.Model.extend({objectName: 'todo'});
 
   var TodoItemView = Frame.View.extend({
     element: 'li',
@@ -73,6 +75,24 @@ $(function() {
           $this.view.addSubview(todoItemView);
         }
       })
+
+      var todoItem = new TodoItem({id: 1});
+      todoItem.fetch({}, {
+        success: function(data, evt) {
+        }
+      });
+
+      //TodoItem.find(1, {
+        //success: function(item) {
+          //console.log(item);
+        //}
+      //});
+
+      //TodoItem.find({title: 'Test'}, {
+        //success: function(items) {
+          //console.log(items);
+        //}
+      //});
     },
 
     // Called by NewTodoItemView as delegate
@@ -88,8 +108,12 @@ $(function() {
   Frame.config.db = {
     type: 'Frame.IndexedStore',
     name: 'todo',
+    version: 15,
     definition: {
-      'todo': {keyPath: 'id', autoIncrement: true},
+      'todo': {
+        keyPath: 'id', autoIncrement: true,
+        indices: {title: false}
+      },
     }
   };
 
