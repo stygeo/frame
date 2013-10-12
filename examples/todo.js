@@ -42,7 +42,7 @@ $(function() {
       var todoItem = new TodoItem({title: this.$.find('input').val()});
 
       var $this = this;
-      todoItem.save([], {
+      todoItem.save({
         success: function(a,b,c) {
           $this.delegate.createdItem(todoItem);
         }
