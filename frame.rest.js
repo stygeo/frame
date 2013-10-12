@@ -25,20 +25,41 @@ $(function() {
         data: parameters,
       });
     },
+
     add: function(object, options) {
+      var url = this.urlForObject(object);
+      var data = {};
+      data[object.resource.singularize()] = object.toJSON();
+
+      this.addWithUrl(url, {
+        success: function(data, textStatus, xhr) {
+          object.serialize(data);
+
+          if(options.success) options.success.call(object, data, textStatus, xhr);
+        },
+        data: data,
+      });
     },
 
+    addWithUrl: function(url, options) {
+      this.request('POST', url, options);
+    },
 
     findByQueryWithUrl: function(query, url, options) {
       this.request('GET', url, options);
     },
 
+    // jQuery AJAX wrapper
     request: function(type, url, options) {
       $.ajax(url, {
         type: type,
+        data: options.data,
         success: function(data, textStatus, xhr) {
           if(options.success) options.success.call(this, data, textStatus, xhr);
         },
+        error: function(e) {
+          console.log(e);
+        }
       })
     },
 

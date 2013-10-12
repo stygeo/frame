@@ -45,7 +45,6 @@ $(function() {
   String.prototype.pluralize = function() {
     return (this[this.length-1] === 's' ? this : this + 's');
   }
-
   String.prototype.singularize = function() {
     return (this[this.length-1] === 's' ? this.substr(0, this.length - 1) : this);
   }
