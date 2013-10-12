@@ -16,6 +16,12 @@ $(function() {
     }
   });
 
+  book.destroy({
+    success: function(data, textStatus, xhr) {
+      addToBody('destroy', this);
+    }
+  });
+
   var newBook = new Book({title: "Two towers", isbn: '12345'});
   newBook.save({
     success: function(data, textStatus, xhr) {

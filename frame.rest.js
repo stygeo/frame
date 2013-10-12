@@ -8,8 +8,6 @@ $(function() {
       this.baseUrl = baseUrl;
       this.defaultKey = options.key || 'id';
     },
-    destroy: function(object, options) {
-    },
 
     // Fetch given resource
     fetch: function(object, parameters, options) {
@@ -41,12 +39,26 @@ $(function() {
       });
     },
 
+    destroy: function(object, options) {
+      var url = this.urlForObject(object);
+
+      this.destroyWithUrl(url, {
+        success: function(data, textStatus, xhr) {
+          if(options.success) options.success.call(object, data, textStatus, xhr);
+        },
+      });
+    },
+
     addWithUrl: function(url, options) {
       this.request('POST', url, options);
     },
 
     findByQueryWithUrl: function(query, url, options) {
       this.request('GET', url, options);
+    },
+
+    destroyWithUrl: function(url, options) {
+      this.request('DELETE', url, options);
     },
 
     // jQuery AJAX wrapper

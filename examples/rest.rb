@@ -36,7 +36,7 @@ delete '/books/:id.?:format?' do
 
   content_type :json
 
-  book = book.delete_at 0
+  book = books.delete_at params[:id].to_i
 
   book.to_json
 end
