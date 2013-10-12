@@ -104,7 +104,7 @@ $(function() {
     constructor: function(options) {
       /* These values are not meant to be KVO. */
       // Determines whether this object is a basic object so you can distinguish them from regular objects.
-      this.basicObjectDefined=true
+     // this.basicObjectDefined=true
       // The current id of the object
       this.gid = __gid();
     },
@@ -224,36 +224,24 @@ $(function() {
 
     },
 
-    // TODO use data store
-    // Load data from the remote source
     fetch: function(parameters, options) {
-      $this = this;
-      var url = ($.isFunction(this.url) ? this.url() : this.url);
-      $.ajax(url, {
-        type: "GET",
-        success: function(data, textStatus, xhr) {
-          // Serialize the attributes
-          $this.serialize(data);
-          // Call the success callback if it was specified
-          if(options.success) {
-            options.success.call($this, data, textStatus, xhr);
-          }
-        }
-      });
+      if(!options) options = {};
+
+      Frame.defaultStore.fetch(this, parameters, options);
     },
 
     save: function(parameters, options) {
       if(!options) options = {};
 
       if(this.isNew) {
-        Frame.dataStore.add(this, options);
+        Frame.defaultStore.add(this, options);
       } else {
         // TODO
       }
     },
 
     destroy: function(options) {
-      Frame.dataStore.destroy(this, options);
+      Frame.defaultStore.destroy(this, options);
     },
 
     serialize: function(serializableAttributes) {
@@ -262,8 +250,10 @@ $(function() {
 
       // Iterate over the retrieved attributes
       for(var key in serializableAttributes) {
-        // Model attributes are 'lazily' added.
-        objectClass.property(key);
+        if(!(key in objectClass)) {
+          // Model attributes are 'lazily' added.
+          objectClass.property(key);
+        }
         // Assign the attributes value
         this.valueForKey(serializableAttributes[key], key);
       }
@@ -288,6 +278,9 @@ $(function() {
       if(!this.url) throw "No URL specified for model";
     },
   });
+  Model.find = function(idOrQuery, options) {
+    Frame.defaultStore.find(this, idOrQuery, options);
+  };
 
   /*
    * Views
@@ -547,10 +540,9 @@ $(function() {
    */
   var DataStore = BasicObject.extend({
     open: function(name, callback, options) {},
+    destroy: function(object, options) {},
+    fetch: function(object, parameters, options) {},
     add: function(object, options) {},
-    addByStoreName: function(storeName, data, options) {},
-    deleteByStoreName: function(storeName, id, options) {},
-    getAllByStoreName: function(storeName, options) {},
   });
 
   /*
@@ -578,7 +570,7 @@ $(function() {
   Frame.ViewController = ViewController;
 
   Frame.DataStore = DataStore;
-  Frame.dataStore = undefined;
+  Frame.defaultStore = undefined;
 
   Frame.Application = Application;
 
@@ -589,6 +581,22 @@ $(function() {
   Frame.makeArray = __makeArray;
   Frame.isBasicObject = __isBasicObject;
   Frame.gid = __gid;
+
+  // Experimental collection
+  var __emptyArray = [];
+  var CollectionPrototype = {
+    push: function(object) {
+      __emptyArray.push.call(this, object);
+    }
+  };
+  _.extend(CollectionPrototype, BasicObject.prototype);
+
+  Frame.Collection = function(objects) {
+    objects = objects || [];
+    objects.__proto__ = CollectionPrototype;
+
+    return objects;
+  };
 
   /*
    * Frame (private) boot strap functions
@@ -608,7 +616,7 @@ $(function() {
         Frame.defaultStore.definition = db.definition;
 
         // Open database and call the onReady when ever it's done.
-        store.open(db.name, onReady);
+        store.open(db.name, onReady, db);
       } else if(false) {
 
       }
