@@ -41,6 +41,15 @@ $(function() {
     return GID;
   }
 
+  // Inflectors
+  String.prototype.pluralize = function() {
+    return (this[this.length-1] === 's' ? this : this + 's');
+  }
+
+  String.prototype.singularize = function() {
+    return (this[this.length-1] === 's' ? this.substr(0, this.length - 1) : this);
+  }
+
   // Creates a shared instance method
   function createDefaultInstanceMethodOn(object) {
     Object.defineProperty(object, 'default', {
@@ -230,7 +239,7 @@ $(function() {
       Frame.defaultStore.fetch(this, parameters, options);
     },
 
-    save: function(parameters, options) {
+    save: function(options) {
       if(!options) options = {};
 
       if(this.isNew) {
@@ -585,12 +594,15 @@ $(function() {
   // Experimental collection
   var __emptyArray = [];
   var CollectionPrototype = {
+    forEach: __emptyArray.forEach,
+
     push: function(object) {
       __emptyArray.push.call(this, object);
     }
   };
   _.extend(CollectionPrototype, BasicObject.prototype);
 
+  // Collections behave like Arrays
   Frame.Collection = function(objects) {
     objects = objects || [];
     objects.__proto__ = CollectionPrototype;
