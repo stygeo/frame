@@ -19,6 +19,8 @@ Documentation / official page can be found at https://stygeo.github.io/frame
 If you like sample code here's a very basic sample application in
 frame.js which should give you a rough impression.
 
+### View controller
+
 ```javascript
 var MyView = Frame.View.extend({
   // Define a custom draw method
@@ -39,6 +41,32 @@ var ExampleViewController = new Frame.ViewController({
 Frame.application = Frame.Application.extend({
   didFinishLaunching: function() {
     this.rootViewController = new ExampleViewController();
+  }
+});
+```
+
+### Data with REST Data Store
+
+```javascript
+// Set the default store to a new rest store
+Frame.defaultStore = new Frame.RestStore('http://localhost');
+
+// Book resource / model
+var Book = Frame.Model.extend({resource: 'books'});
+
+// Fetch a resource
+var book = new Book({id: 1});
+book.fetch({}, {
+  success: function(data, textStatus, xhr) {
+    console.log(this);
+  }
+});
+
+// Save a resource
+var newBook = new Book({title: "Two towers", isbn: '12345'});
+newBook.save({
+  success: function(data, textStatus, xhr) {
+    console.log(this);
   }
 });
 ```
