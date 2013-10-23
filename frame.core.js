@@ -590,6 +590,91 @@ $(function() {
   Frame.isBasicObject = __isBasicObject;
   Frame.gid = __gid;
 
+  var EventTarget = {
+    // EXPERIMENTAL
+    events: function(event) {
+      if(this._events === undefined) this._events = {};
+
+      // Return the event property or return the event list based on the argument
+      if(event !== undefined) {
+        // Set a default array
+        if(this._events[event] === undefined) this._events[event] = [];
+
+        return this._events[event];
+      }
+      else return this._events;
+    },
+
+    /*
+     * On (event)
+     * event: the event
+     * callback: callback to invoke upon 'trigger'
+     * scope: object used for 'call' method.
+     */
+    on: function(event, callback, scope) {
+      // Push the callback to the event stack
+      var eventListeners = this.events(event);
+      eventListeners.push({callback: callback, scope: scope});
+
+      // Return the collection so we may chain
+      return this;
+    },
+    off: function(event, callback) {
+      if(callback === undefined) {
+        this.events(event).length = 0;
+      } else if(typeof callback === 'function') {
+        for(var i = 0; i < this.events(event).length; i++) {
+          var v = this.events(event)[i];
+          if(v.callback === callback) {
+            this.events(event).splice(i, 1);
+            break;
+          }
+        }
+      // If callback is object it's an key value hash
+      } else if(typeof callback === 'object') {
+        var object = event,
+            options = callback;
+        if('all' in options && options.all) {
+          var events = this._events;
+          // Find all observers
+          for(var event in events) {
+            var allObservers = [];
+            var observers = events[event];
+            // Loop over each observer
+            for(var i = 0; i < observers.length; i++) {
+              var v = observers[i];
+              // The event must be an object of some sort
+              if(v.scope === object) {allObservers.push(v);}
+            }
+
+            // Remove the observers
+            for(var i = 0; i < allObservers.length; i++) {
+              events[event].splice(events[event].indexOf(allObservers[i]), 1);
+            }
+          }
+
+        }
+      }
+    },
+
+    /*
+     * Trigger (event)
+     * Trigger a specific event
+     * event: event you'd like to trigger
+     */
+    trigger: function(event, data) {
+      var customEvent = new CustomEvent(event);
+      customEvent.customData = data;
+
+      // Loop over each event-callback and invoke the callback (w/ optionally the scope)
+      for(var i = 0; i < this.events(event).length; i++) {
+        var v = this.events(event)[i]
+
+        if(v !== undefined) v.callback.call(v.scope || this, customEvent);
+      }
+    },
+  };
+
   // Experimental collection
   var __emptyArray = [];
   var CollectionPrototype = {
@@ -597,13 +682,36 @@ $(function() {
 
     push: function(object) {
       __emptyArray.push.call(this, object);
-    }
+
+      this.trigger('change', object);
+    },
+
+    clear: function(arrayOrUndefined) {
+      this.length = 0;
+
+      if(arrayOrUndefined !== undefined) {
+        // We do not want to trigger a callback for each element
+        // added if it's being observed.
+        for(var i = 0; i < arrayOrUndefined.length; i++) {
+          __emptyArray.push.call(this, arrayOrUndefined[i]);
+        }
+
+        this.trigger('reset', this);
+      }
+
+      return this;
+    },
+
+    // Same as clear
+    reset: function(array) {return this.clear(array);},
+
   };
   _.extend(CollectionPrototype, BasicObject.prototype);
+  _.extend(CollectionPrototype, EventTarget);
 
   // Collections behave like Arrays
-  Frame.Collection = function(objects) {
-    objects = objects || [];
+  Frame.Collection = function(array) {
+    objects = array || [];
     objects.__proto__ = CollectionPrototype;
 
     return objects;
