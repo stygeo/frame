@@ -68,12 +68,10 @@ $(function() {
 
       var success = false;
       var bookCollection = new BookCollection()
-      bookCollection.fetch({
-        success: function() {
-          success = true;
-        },
-        async: false,
+      bookCollection.on('reset', function(collection) {
+        this === collection;
       });
+      bookCollection.fetch({async: false});
 
       return success;
     });
