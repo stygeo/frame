@@ -26,17 +26,18 @@ $(function() {
 
     add: function(object, options) {
       var url = this.urlForObject(object);
-      var data = {};
-      data[object.resource.singularize()] = object.toJSON();
+      var originalSuccess = options.success;
 
-      this.addWithUrl(url, {
-        success: function(data, textStatus, xhr) {
-          object.serialize(data);
+      // Construct the options
+      options.data = {};
+      options.data[object.resource.singularize()] = object.toJSON();
+      options.success = function(data, textStatus, xhr) {
+        object.serialize(data);
 
-          if(options.success) options.success.call(object, data, textStatus, xhr);
-        },
-        data: data,
-      });
+        if(originalSuccess) originalSuccess.call(object, data, textStatus, xhr);
+      };
+
+      this.addWithUrl(url, options);
     },
 
     destroy: function(object, options) {
@@ -71,7 +72,8 @@ $(function() {
         },
         error: function(e) {
           console.log(e);
-        }
+        },
+        async: ('async' in options ? options.async : true),
       })
     },
 
