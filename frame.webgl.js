@@ -85,4 +85,9 @@ $(function() {
   // Expose classes
   Frame.WebGLView = WebGLView;
   Frame.WebGLViewController = WebGLViewController;
+
+  // Register AMD module.
+  if(typeof define === "function" && define.amd) {
+    define("frame.webgl", [], function() { return Frame; });
+  }
 });

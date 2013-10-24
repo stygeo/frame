@@ -791,6 +791,10 @@ $(function() {
     },
   });
 
-
   window.Frame = Frame;
+
+  // Register AMD module.
+  if(typeof define === "function" && define.amd) {
+    define("frame", [], function() { return Frame; });
+  }
 });

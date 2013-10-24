@@ -250,4 +250,9 @@ $(function() {
   });
 
   Frame.IndexedStore = Store;
+
+  // Register AMD module.
+  if(typeof define === "function" && define.amd) {
+    define("frame.indexed", [], function() { return Frame; });
+  }
 });

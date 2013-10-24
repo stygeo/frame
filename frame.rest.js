@@ -129,4 +129,9 @@ $(function() {
   });
 
   Frame.RestStore = RestStore;
+
+  // Register AMD module.
+  if(typeof define === "function" && define.amd) {
+    define("frame.rest", [], function() { return Frame; });
+  }
 });

@@ -1,4 +1,8 @@
+// Please note that unless you disable Chrome's "Access-Control-Allow-Origin" setting this sample won't run.
+// Either disable it temporarily or use Safari (7.0+)
+
 $(function() {
+
   function addToBody(str, object) {
     $("body").append( $("<div/>").html(str + " = " + JSON.stringify(object.toJSON()) ) );
   }
@@ -8,8 +12,6 @@ $(function() {
   var Book = Frame.Model.extend({
     resource: 'books', // Might change back to objectName.
   });
-  window.Book = Book
-
 
   newTest("Interfacing with RestStore and option handling", function() {
 
@@ -74,6 +76,5 @@ $(function() {
     });
 
   });
-
 
 });
