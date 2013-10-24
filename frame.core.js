@@ -82,7 +82,6 @@ $(function() {
     Surrogate.prototype = parent.prototype;
     // Copy over static methods
     child.prototype = new Surrogate;
-    child.prototype.Class = child;
 
     if (protoProps) _.extend(child.prototype, protoProps);
 
@@ -186,10 +185,6 @@ $(function() {
           }
         }
       }
-    },
-
-    isKindOfClass: function(klass) {
-      return this.Class == klass;
     },
   });
 
