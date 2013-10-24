@@ -12,16 +12,15 @@ $(function() {
     // Fetch given resource
     fetch: function(object, parameters, options) {
       var url = this.urlForObject(object);
+      var originalSuccess = options.success;
+      options.data = parameters;
+      options.success = function(data, textStatus, xhr) {
+        object.serialize(data);
 
-      this.findByQueryWithUrl(parameters, url, {
-        success: function(data, textStatus, xhr) {
-          object.serialize(data);
+        if(originalSuccess) originalSuccess.call(object, data, textStatus, xhr);
+      };
 
-          if(options.success) options.success.call(object, data, textStatus, xhr);
-        },
-
-        data: parameters,
-      });
+      this.findByQueryWithUrl(parameters, url, options);
     },
 
     add: function(object, options) {
@@ -48,6 +47,35 @@ $(function() {
           if(options.success) options.success.call(object, data, textStatus, xhr);
         },
       });
+    },
+
+    all: function(collection, model, options) {
+      var url = this.urlForObject(model);
+      var originalSuccess = options.success;
+
+      collection = collection || Frame.Collection();
+      options.success = function(data, textStatus, xhr) {
+        var serializedObjects = [];
+
+        var o1, o2, o3;
+        for(var i = 0; i < data.length; i++) {
+          var object = new model(data[i]);
+          if(i === 0) o1 = object;
+          if(i === 1) o2 = object;
+          if(i === 2) o3 = object;
+          collection.push(object);
+        }
+
+        //collection.reset(serializedObjects);
+
+        if(originalSuccess) originalSuccess.call(collection, collection, data, textStatus, xhr);
+      }
+
+      this.findAllByQueryWithUrl(url, options);
+    },
+
+    findAllByQueryWithUrl: function(url, options) {
+      this.request('GET', url, options);
     },
 
     addWithUrl: function(url, options) {
@@ -78,10 +106,11 @@ $(function() {
     },
 
     // Default URL for restful stores
-    defaultUrl: function() {
-      var base = [Frame.defaultStore.baseUrl, this.resource]
-      if(this[Frame.defaultStore.defaultKey]) {
-        base.push(this[Frame.defaultStore.defaultKey]);
+    defaultUrl: function(object, isResource) {
+      var base = [Frame.defaultStore.baseUrl, object.resource]
+
+      if(isResource && object[Frame.defaultStore.defaultKey]) {
+        base.push(object[Frame.defaultStore.defaultKey]);
       }
 
       return base.join('/');
@@ -89,12 +118,17 @@ $(function() {
 
     // Generate url for object/resource
     urlForObject: function(object) {
-      // Object could possibly be prototype object
-      if(!object.url) {
-        object.url = this.defaultUrl;
+      // Object could possibly be interface
+      var url;
+      if(object.prototype) {
+        url = this.defaultUrl(object.prototype);
+      } else if(!object.url) {
+        url = this.defaultUrl(object, true);
+      } else {
+        url = ($.isFunction(object.url) ? object.url() : object.url);
       }
 
-      return ($.isFunction(object.url) ? object.url() : object.url)
+      return url;
     },
   });
 

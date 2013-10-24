@@ -262,6 +262,7 @@ $(function() {
           // Model attributes are 'lazily' added.
           objectClass.property(key);
         }
+
         // Assign the attributes value
         this.valueForKey(serializableAttributes[key], key);
       }
@@ -288,6 +289,9 @@ $(function() {
   });
   Model.find = function(idOrQuery, options) {
     Frame.defaultStore.find(this, idOrQuery, options);
+  };
+  Model.all = function(collection, options) {
+    Frame.defaultStore.all(collection, this, options);
   };
 
   /*
@@ -551,6 +555,7 @@ $(function() {
     destroy: function(object, options) {},
     fetch: function(object, parameters, options) {},
     add: function(object, options) {},
+    all: function(collection, options) {},
   });
 
   /*

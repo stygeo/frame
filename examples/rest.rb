@@ -18,7 +18,7 @@ get '/books/:id.?:format?' do
 
   content_type :json
 
-  books[0].to_json
+  books[params[:id].to_i].to_json
 end
 
 patch '/books/:id.?:format?' do
