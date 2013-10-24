@@ -24,6 +24,14 @@ $(function() {
       return returned;
     });
 
+    test('Saving objects', function() {
+      var passed = false;
+      var book = new Book({title: "bar"});
+      book.save({async: false});
+
+      return book.id !== undefined;
+    });
+
     test('Fetching 2 resources with different names', function() {
       var first = new Book({id: 1});
       first.fetch({}, {async: false, success: function(){
@@ -35,27 +43,6 @@ $(function() {
 
       return second.title !== first.title
     });
-
-    //var book = new Book({id: 1});
-    //book.fetch({}, {
-      //success: function(data, textStatus, xhr) {
-        //addToBody('fetch', this);
-      //}
-    //});
-
-    //book.destroy({
-      //success: function(data, textStatus, xhr) {
-        //addToBody('destroy', this);
-      //}
-    //});
-
-    //var newBook = new Book({title: "Two towers", isbn: '12345'});
-    //newBook.save({
-      //success: function(data, textStatus, xhr) {
-        //addToBody('save', this);
-      //}
-    //});
-
   });
 
   newTest("Restful collections", function() {
