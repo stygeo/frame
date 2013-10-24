@@ -47,6 +47,8 @@ Frame.application = Frame.Application.extend({
 
 ### Data with REST Data Store
 
+#### Fetch
+
 ```javascript
 // Set the default store to a new rest store
 Frame.defaultStore = new Frame.RestStore('http://localhost');
@@ -61,12 +63,37 @@ book.fetch({}, {
     console.log(this);
   }
 });
+```
 
-// Save a resource
+#### Save
+
+```javascript
 var newBook = new Book({title: "Two towers", isbn: '12345'});
 newBook.save({
   success: function(data, textStatus, xhr) {
     console.log(this);
+  }
+});
+```
+
+#### list
+
+```javascript
+// Lists requires frame's collection
+var collection = new Frame(); // new Frame() is shorthand for new Frame.Collection()
+collection.on('reset', function() {
+  console.log("Fetched");
+});
+Book.all(collection);
+```
+
+The above could also have been written as
+
+```javascript
+var collection = new Frame();
+Book.all(collection, {
+  success: function() {
+    console.log("Fetched"); 
   }
 });
 ```

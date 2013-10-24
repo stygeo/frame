@@ -748,7 +748,6 @@ $(function() {
   /*
    * Frame (private) boot strap functions
    */
-
   function BootstrapDatabase(onReady) {
     if(Frame.config.db) {
       var db = Frame.config.db;
