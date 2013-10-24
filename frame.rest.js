@@ -59,14 +59,10 @@ $(function() {
 
         var o1, o2, o3;
         for(var i = 0; i < data.length; i++) {
-          var object = new model(data[i]);
-          if(i === 0) o1 = object;
-          if(i === 1) o2 = object;
-          if(i === 2) o3 = object;
-          collection.push(object);
+          serializedObjects.push(new model(data[i]));
         }
 
-        //collection.reset(serializedObjects);
+        collection.reset(serializedObjects);
 
         if(originalSuccess) originalSuccess.call(collection, collection, data, textStatus, xhr);
       }

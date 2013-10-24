@@ -74,17 +74,17 @@ $(function() {
       return success;
     });
 
-    ////test('Collection loading from the model with "on" callback mechanism', function() {
-      ////var success = false
-      ////var bookCollection = Frame.Collection();
+    test('Collection loading from the model with "on" callback mechanism', function() {
+      var success = false
+      var bookCollection = Frame.Collection();
 
-      ////bookCollection.on('reset', function(collection) {
-        ////success = bookCollection === collection;
-      ////});
-      ////Book.all(bookCollection, {async: false});
+      bookCollection.on('reset', function(collection) {
+        success = bookCollection === collection;
+      });
+      Book.all(bookCollection, {async: false});
 
-      ////return success;
-    ////});
+      return success;
+    });
 
   });
 

@@ -675,7 +675,7 @@ $(function() {
       for(var i = 0; i < this.events(event).length; i++) {
         var v = this.events(event)[i]
 
-        if(v !== undefined) v.callback.call(v.scope || this, customEvent);
+        if(v !== undefined) v.callback.call(v.scope || this, this, customEvent);
       }
     },
   };
