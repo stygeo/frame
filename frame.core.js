@@ -1,5 +1,4 @@
 $(function() {
-  var Frame = {};
   // Helper methods
   var __emptyHash = {}, __has, __extend, __currentGID = 0,
   __has = function(object, property) { return __emptyHash.hasOwnProperty.call(object, property); },
@@ -101,6 +100,15 @@ $(function() {
     }
 
     return child;
+  };
+
+  var VariableConstructor = function(constructor, args) {
+    function F() {
+      return constructor.apply(this, args);
+    }
+    F.prototype = constructor.prototype;
+
+    return new F();
   };
 
   var Construct = function(){};
@@ -563,32 +571,6 @@ $(function() {
     willTerminate: function(){}
   });
 
-  // Frame configuration options.
-  Frame.config = {};
-
-  // Objects
-  Frame.BasicObject = BasicObject;
-  Frame.Model = Model;
-
-  // Views
-  Frame.View = View;
-  Frame.CanvasView = CanvasView;
-  Frame.Button = Button;
-  // Controllers
-  Frame.ViewController = ViewController;
-
-  Frame.DataStore = DataStore;
-  Frame.defaultStore = undefined;
-
-  Frame.Application = Application;
-
-  // Methods
-  Frame.createDefaultInstanceMethodOn = createDefaultInstanceMethodOn;
-  Frame.has = __has;
-  Frame.keys = __keys;
-  Frame.makeArray = __makeArray;
-  Frame.isBasicObject = __isBasicObject;
-  Frame.gid = __gid;
 
   var EventTarget = {
     // EXPERIMENTAL
@@ -707,15 +689,61 @@ $(function() {
 
   };
 
-  Frame.Collection = function(array) {
+  var Collection = function(array) {
+    var a;
     if(array instanceof Array) {
-      __emptyArray.push.apply(this, array);
+      a = array;
+    } else {
+      // Splat argument array
+      a = Array.prototype.slice.call(arguments, 0);
     }
+    console.log('length is', a.length);
+
+    if(a.length > 0) __emptyArray.push.apply(this, a);
   }
-  Frame.Collection.prototype = new Array();
-  _.extend(Frame.Collection.prototype, CollectionPrototype);
-  _.extend(Frame.Collection.prototype, BasicObject.prototype);
-  _.extend(Frame.Collection.prototype, EventTarget);
+  Collection.prototype = new Array();
+  _.extend(Collection.prototype, CollectionPrototype);
+  _.extend(Collection.prototype, BasicObject.prototype);
+  _.extend(Collection.prototype, EventTarget);
+
+
+  // Frame collection helper
+  var Frame = function(a) {
+    if(!(a instanceof Array)) {
+      // Set a to arguments if it's not an array
+      a = Array.prototype.slice.call(arguments, 0);
+    }
+
+    return VariableConstructor(Collection, a);
+  };
+
+  // Frame configuration options.
+  Frame.config = {};
+
+  // Objects
+  Frame.BasicObject = BasicObject;
+  Frame.Model = Model;
+  Frame.Collection = Collection;
+
+  // Views
+  Frame.View = View;
+  Frame.CanvasView = CanvasView;
+  Frame.Button = Button;
+  // Controllers
+  Frame.ViewController = ViewController;
+
+  Frame.DataStore = DataStore;
+  Frame.defaultStore = undefined;
+
+  Frame.Application = Application;
+
+  // Methods
+  Frame.createDefaultInstanceMethodOn = createDefaultInstanceMethodOn;
+  Frame.has = __has;
+  Frame.keys = __keys;
+  Frame.makeArray = __makeArray;
+  Frame.isBasicObject = __isBasicObject;
+  Frame.gid = __gid;
 
   /*
    * Frame (private) boot strap functions

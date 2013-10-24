@@ -61,4 +61,6 @@ $(function() {
 
   window.newTest = newTest;
   window.test = test;
+  window.it = test;
+  window.describe = newTest;
 });

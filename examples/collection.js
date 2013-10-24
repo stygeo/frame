@@ -73,4 +73,16 @@ $(function() {
     });
 
   });
+
+  describe("Collection initialization", function() {
+    it('should threat optional arguments as array', function() {
+      var c = new Frame.Collection(1,2);
+      return c.length === 2;
+    });
+
+    it('should accept an array and concatinate it', function() {
+      var c = new Frame.Collection([1,2]);
+      return c.length === 2;
+    });
+  });
 });
