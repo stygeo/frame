@@ -9,6 +9,7 @@ $(function() {
     resource: 'books', // Might change back to objectName.
   });
 
+  // All test runs synchronously for testing purposes.
   newTest("Interfacing with RestStore and option handling", function() {
 
     test('Synchronous rest', function() {
