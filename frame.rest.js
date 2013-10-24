@@ -53,7 +53,7 @@ $(function() {
       var url = this.urlForObject(model);
       var originalSuccess = options.success;
 
-      collection = collection || Frame.Collection();
+      collection = collection || new Frame.Collection();
       options.success = function(data, textStatus, xhr) {
         var serializedObjects = [];
 

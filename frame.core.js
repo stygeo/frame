@@ -706,16 +706,16 @@ $(function() {
     reset: function(array) {return this.clear(array);},
 
   };
-  _.extend(CollectionPrototype, BasicObject.prototype);
-  _.extend(CollectionPrototype, EventTarget);
 
-  // Collections behave like Arrays
   Frame.Collection = function(array) {
-    objects = array || [];
-    objects.__proto__ = CollectionPrototype;
-
-    return objects;
-  };
+    if(array instanceof Array) {
+      __emptyArray.push.apply(this, array);
+    }
+  }
+  Frame.Collection.prototype = new Array();
+  _.extend(Frame.Collection.prototype, CollectionPrototype);
+  _.extend(Frame.Collection.prototype, BasicObject.prototype);
+  _.extend(Frame.Collection.prototype, EventTarget);
 
   /*
    * Frame (private) boot strap functions

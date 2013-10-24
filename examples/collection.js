@@ -1,6 +1,6 @@
 $(function() {
 
-  var collection = Frame.Collection();
+  var collection = new Frame.Collection();
 
   collection
     .on('change', function(event) {

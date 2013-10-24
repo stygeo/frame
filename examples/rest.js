@@ -33,9 +33,7 @@ $(function() {
 
     test('Fetching 2 resources with different names', function() {
       var first = new Book({id: 1});
-      first.fetch({}, {async: false, success: function(){
-        console.log(this);
-      }});
+      first.fetch({}, {async: false});
 
       var second = new Book({id: 2});
       second.fetch({}, {async: false});
@@ -48,7 +46,7 @@ $(function() {
 
     test('Collection loading from the model with success callback', function() {
       var success = false
-      var bookCollection = Frame.Collection();
+      var bookCollection = new Frame.Collection();
       Book.all(bookCollection, {
         success: function(collection) {
           success = bookCollection === collection;
@@ -62,7 +60,7 @@ $(function() {
 
     test('Collection loading from the model with "on" callback mechanism', function() {
       var success = false
-      var bookCollection = Frame.Collection();
+      var bookCollection = new Frame.Collection();
 
       bookCollection.on('reset', function(collection) {
         success = bookCollection === collection;
