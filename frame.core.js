@@ -247,7 +247,7 @@ $(function() {
       if(this.isNew) {
         Frame.defaultStore.add(this, options);
       } else {
-        // TODO
+        Frame.defaultStore.update(this, options);
       }
     },
 

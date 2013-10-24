@@ -16,6 +16,8 @@ $(function() {
       options.data = parameters;
       options.success = function(data, textStatus, xhr) {
         object.serialize(data);
+        // Since it's fetched, it ain't new.
+        object.isNew = false;
 
         if(originalSuccess) originalSuccess.call(object, data, textStatus, xhr);
       };
@@ -32,6 +34,8 @@ $(function() {
       options.data[object.resource.singularize()] = object.toJSON();
       options.success = function(data, textStatus, xhr) {
         object.serialize(data);
+        // Object has been saved, it's no longer new
+        object.isNew = false;
 
         if(originalSuccess) originalSuccess.call(object, data, textStatus, xhr);
       };
@@ -39,14 +43,30 @@ $(function() {
       this.addWithUrl(url, options);
     },
 
+    update: function(object, options) {
+      var url = this.urlForObject(object);
+      var originalSuccess = options.success;
+
+      // Construct the options
+      options.data = {};
+      options.data[object.resource.singularize()] = object.toJSON();
+      options.success = function(data, textStatus, xhr) {
+        object.serialize(data);
+
+        if(originalSuccess) originalSuccess.call(object, data, textStatus, xhr);
+      };
+
+      this.updateWithUrl(url, options);
+    },
+
     destroy: function(object, options) {
       var url = this.urlForObject(object);
+      var originalSuccess = options.success;
 
-      this.destroyWithUrl(url, {
-        success: function(data, textStatus, xhr) {
-          if(options.success) options.success.call(object, data, textStatus, xhr);
-        },
-      });
+      options.success = function(data, textStatus, xhr) {
+        if(originalSuccess) originalSuccess.call(object, data, textStatus, xhr);
+      };
+      this.destroyWithUrl(url, options);
     },
 
     all: function(collection, model, options) {
@@ -57,9 +77,11 @@ $(function() {
       options.success = function(data, textStatus, xhr) {
         var serializedObjects = [];
 
-        var o1, o2, o3;
         for(var i = 0; i < data.length; i++) {
-          serializedObjects.push(new model(data[i]));
+          var o = new model(data[i]);
+          o.isNew = false;
+
+          serializedObjects.push(o);
         }
 
         collection.reset(serializedObjects);
@@ -78,6 +100,10 @@ $(function() {
       this.request('POST', url, options);
     },
 
+    updateWithUrl: function(url, options) {
+      this.request('PATCH', url, options);
+    },
+
     findByQueryWithUrl: function(query, url, options) {
       this.request('GET', url, options);
     },
@@ -94,8 +120,8 @@ $(function() {
         success: function(data, textStatus, xhr) {
           if(options.success) options.success.call(this, data, textStatus, xhr);
         },
-        error: function(e) {
-          console.log(e);
+        error: function(xhr, status, err) {
+          console.log("XHR error:", err);
         },
         async: ('async' in options ? options.async : true),
       })

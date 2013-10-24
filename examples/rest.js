@@ -10,9 +10,9 @@ $(function() {
   });
 
   // All test runs synchronously for testing purposes.
-  newTest("Interfacing with RestStore and option handling", function() {
+  describe("Interfacing with RestStore and option handling", function() {
 
-    test('Synchronous rest', function() {
+    it('should do synchronous rest', function() {
       var returned = false;
       var book = new Book({title: 'foo'})
       book.save({
@@ -23,7 +23,7 @@ $(function() {
       return returned;
     });
 
-    test('Saving objects', function() {
+    it('should save objects and have an id', function() {
       var passed = false;
       var book = new Book({title: "bar"});
       book.save({async: false});
@@ -31,7 +31,7 @@ $(function() {
       return book.id !== undefined;
     });
 
-    test('Fetching 2 resources with different names', function() {
+    it('should fetch 2 resources and have different names', function() {
       var first = new Book({id: 1});
       first.fetch({}, {async: false});
 
@@ -40,11 +40,50 @@ $(function() {
 
       return second.title !== first.title
     });
+
+    it('should destroy a resource', function() {
+      var passed = false;
+      var book = new Book({id: 1});
+      book.fetch({}, {
+        success: function() {
+          this.destroy({
+            success: function() {
+              var t = new Book({id: 1});
+              t.fetch({}, {
+                success: function() {
+                  passed = true
+                },
+                async: false
+              });
+            },
+            async: false
+          });
+        },
+        async: false
+      });
+
+      return passed;
+    });
+
+    it('should update an object', function() {
+      var passed = false;
+      var book = new Book({id:1});
+      book.fetch({},{async: false});
+
+      book.title = "Updated title";
+      book.save({async: false, 
+                success: function() {
+                  passed = this.title === "Updated title"; 
+                }
+      });
+
+      return passed;
+    });
   });
 
-  newTest("Restful collections", function() {
+  describe("Restful collections", function() {
 
-    test('Collection loading from the model with success callback', function() {
+    it('should load a resource and add entries to a collection', function() {
       var success = false
       var bookCollection = new Frame.Collection();
       Book.all(bookCollection, {
@@ -58,7 +97,7 @@ $(function() {
       return success;
     });
 
-    test('Collection loading from the model with "on" callback mechanism', function() {
+    it('should reset the collection', function() {
       var success = false
       var bookCollection = new Frame.Collection();
 
