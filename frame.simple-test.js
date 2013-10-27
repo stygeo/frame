@@ -4,7 +4,7 @@ $(function() {
   }
 
   function describe(testDescription, callback) {
-    window.currentTest = {success: 0, failed: 0};
+    window.currentTest = {success: 0, failed: 0, skipped: 0};
 
 
     var testMessage = "Test: "+testDescription;
@@ -13,7 +13,7 @@ $(function() {
 
     callback();
 
-    var resMessage = "Success: "+window.currentTest.success+ " Failed: "+window.currentTest.failed;
+    var resMessage = "Success: "+window.currentTest.success+ " Skipped: "+window.currentTest.skipped + " Failed: "+window.currentTest.failed;
     $("body").append($("<div/>").text(resMessage));
     console.log(resMessage);
   }
@@ -44,19 +44,14 @@ $(function() {
       color = 'red';
 
       window.currentTest.failed++;
-
-      console.log(str);
     } else {
       str = "PASSED: "+str;
       color = 'green';
 
       window.currentTest.success++;
-
-      console.log(str);
     }
 
-    var el = $("<div/>");
-    $("body").append(el.html(str.replace("\n", "<br>") + (passed ? '' : "<br>"+callerLine)).css({background: color, color: 'white'}));
+    print(str, passed, getLineNumber(), color);
   }
 
   function getLineNumber() {
@@ -80,6 +75,8 @@ $(function() {
 
   it.skip = function(str) {
     var message = "SKIPPED: "+str;
+
+    window.currentTest.skipped++;
 
     print(message, false, getLineNumber(), 'orange');
   }
