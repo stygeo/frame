@@ -3,7 +3,7 @@ $(function() {
     try { throw Error('') } catch(err) { return err; }
   }
 
-  function newTest(testDescription, callback) {
+  function describe(testDescription, callback) {
     window.currentTest = {success: 0, failed: 0};
 
 
@@ -18,7 +18,7 @@ $(function() {
     console.log(resMessage);
   }
 
-  function test(str, callback) {
+  function it(str, callback) {
     var passed;
     var exception;
     var color;
@@ -59,8 +59,33 @@ $(function() {
     $("body").append(el.html(str.replace("\n", "<br>") + (passed ? '' : "<br>"+callerLine)).css({background: color, color: 'white'}));
   }
 
-  window.newTest = newTest;
-  window.test = test;
-  window.it = test;
-  window.describe = newTest;
+  function getLineNumber() {
+    var err = getErrorObject();
+    var stack = err.stack.split("\n");
+    var callerLine = stack[3].split("/");
+    callerLine = callerLine[callerLine.length - 1];
+    var index = callerLine.indexOf("at ");
+    var file = stack[3].split(/:\d*:\d*$/)[0];
+
+    return [callerLine.slice(index+1, callerLine.length), file];
+  }
+
+  function print(str, passed, callerLine, backgroundColor) {
+    console.log(str);
+
+    var el = $("<div/>");
+    $("body").append(el.html(str + (passed ? '' : " =&gt; <a href='"+callerLine[1]+"'>"+callerLine[0]+"</a>")).css({background: backgroundColor, color: 'white'}));
+
+  }
+
+  it.skip = function(str) {
+    var message = "SKIPPED: "+str;
+
+    print(message, false, getLineNumber(), 'orange');
+  }
+
+  window.newTest = describe;
+  window.test = it;
+  window.it = it;
+  window.describe = describe;
 });
