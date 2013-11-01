@@ -1,4 +1,6 @@
 $(function() {
+  var __version = '0.1';
+
   // Helper methods
   var __emptyHash = {}, __has, __extend, __currentGID = 0,
   __has = function(object, property) { return __emptyHash.hasOwnProperty.call(object, property); },
@@ -646,13 +648,13 @@ $(function() {
      */
     trigger: function(event, data) {
       var customEvent = new CustomEvent(event);
-      customEvent.customData = data;
+      customEvent.data = data;
 
       // Loop over each event-callback and invoke the callback (w/ optionally the scope)
       for(var i = 0; i < this.events(event).length; i++) {
         var v = this.events(event)[i]
 
-        if(v !== undefined) v.callback.call(v.scope || this, this, customEvent);
+        if(v !== undefined) v.callback.call(v.scope || this, customEvent, data);
       }
     },
   };
@@ -725,6 +727,9 @@ $(function() {
   Frame.Model = Model;
   Frame.Collection = Collection;
 
+  // Expose Frame's 'EventTarget' implementation
+  Frame.EventTarget = EventTarget;
+
   // Views
   Frame.View = View;
   Frame.CanvasView = CanvasView;
@@ -744,6 +749,8 @@ $(function() {
   Frame.makeArray = __makeArray;
   Frame.isBasicObject = __isBasicObject;
   Frame.gid = __gid;
+
+  Frame.VERSION = __version;
 
   /*
    * Frame (private) boot strap functions

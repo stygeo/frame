@@ -11,3 +11,10 @@ body {
 div {
   margin: 5px 0;
 }
+
+.frame-footer {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  font-size: 10px;
+}

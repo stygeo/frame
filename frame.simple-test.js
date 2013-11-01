@@ -34,6 +34,7 @@ $(function() {
 
     var resMessage = "Success: "+window.currentTest.success+ " Skipped: "+window.currentTest.skipped + " Failed: "+window.currentTest.failed;
     $("body").append($("<div/>").text(resMessage));
+
     console.log(resMessage);
   }
 
@@ -41,18 +42,18 @@ $(function() {
     var passed;
     var exception;
 
-    try {
+    //try {
       passed = callback();
-    } catch(e) {
-      passed = false;
-      exception = e;
-    }
+    //} catch(e) {
+      //passed = false;
+      //exception = e;
+    //}
 
     if(!passed) {
       str = "FAILED: "+str;
 
       if(exception) {
-        str += "\n" + exception;
+        str += "\n" + exception + "<br>"+exception.stack.split("\n");
       }
       color = 'red';
 
