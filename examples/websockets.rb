@@ -3,7 +3,43 @@ require 'json'
 require 'sinatra-websocket'
 
 set :server, 'thin'
-set :sockets, []
+set :sockets, {}
+set :channels, []
+
+module Type
+  DISCONNECT = 0
+  MESSAGE = 1
+  JSON = 2
+  EVENT = 3
+end
+
+def unpack_message payload
+  arr = text.split(":")
+
+  payload = case arr[0]
+            when Type::DISCONNECT
+            when Type::MESSAGE
+              arr[0]
+            when Type::JSON
+              JSON.parse arr[1]
+            end
+
+  return {type: arr[0], payload: payload}
+end
+
+def pack_message type, payload, extra=nil, channel=nil
+  payload = case type
+            when Type::DISCONNECT
+            when Type::MESSAGE
+              payload
+            when Type::JSON
+              payload.to_json
+            when Type::EVENT
+              {name: payload, data: extra}
+            end
+
+  return {type: type, data: payload, channel: channel}.to_json
+end
 
 def parse text_or_json
   begin
@@ -15,69 +51,42 @@ end
 
 get '/' do
   if !request.websocket?
-    erb :index
   else
+  end
+end
+
+o = [(0..9), ('a'..'z'), (0..9)].map { |i| i.to_a }.flatten
+# Initialize handshake
+get "/websocket" do
+  id = (0...12).map{ o[rand(o.length)] }.join
+
+  {id: id, beat: 10}.to_json
+end
+
+# Initialize previous created session
+get "/websocket/:id" do
+  if request.websocket?
+    socket_id = params[:id]
+
     request.websocket do |ws|
       ws.onopen do
-        warn request.session.inspect
+        message = pack_message(Type::EVENT, 'connect')
 
-        ws.send({type: 'init', data: "Hello world"}.to_json)
-        settings.sockets << ws
+        ws.send( message )
+
+        settings.sockets[socket_id] = {socket: ws}
       end
 
       ws.onmessage do |msg|
-        json_msg = parse msg
-        response = case json_msg["event"]
-        when 'message:post'
-          {event: 'message:new', data: {message: 'PONG'}}
-        end
+        puts "#{msg} from: #{socket_id}"
+        response = socket_id
 
-        #warn "Responding with #{response}"
-
-        EM.next_tick { settings.sockets.each{|s| s.send(response.to_json) } }
+        #EM.next_tick { settings.sockets.each{|s| s.send(response.to_json) } }
       end
+
       ws.onclose do
-        warn("wetbsocket closed")
         settings.sockets.delete(ws)
       end
     end
   end
 end
-
-__END__
-@@ index
-<html>
-  <body>
-     <h1>Simple Echo & Chat Server</h1>
-     <form id="form">
-       <input type="text" id="input" value="send a message"></input>
-     </form>
-     <div id="msgs"></div>
-  </body>
-
-  <script type="text/javascript">
-    window.onload = function(){
-      (function(){
-        var show = function(el){
-          return function(msg){ el.innerHTML = msg + '<br />' + el.innerHTML; }
-        }(document.getElementById('msgs'));
-
-        var ws       = new WebSocket('ws://' + window.location.host + window.location.pathname);
-        ws.onopen    = function()  { show('websocket opened'); };
-        ws.onclose   = function()  { show('websocket closed'); }
-        ws.onmessage = function(m) { show('websocket message: ' +  m.data); };
-
-        var sender = function(f){
-          var input     = document.getElementById('input');
-          input.onclick = function(){ input.value = "" };
-          f.onsubmit    = function(){
-            ws.send(input.value);
-            input.value = "send a message";
-            return false;
-          }
-        }(document.getElementById('form'));
-      })();
-    }
-  </script>
-</html>
-

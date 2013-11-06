@@ -1,7 +1,9 @@
 $(function() {
+  jQuery.ajaxSetup({async: false});
+
   // Websockets
   function getSock() {
-    return new Frame.Socket("ws://localhost:4567");
+    return new Frame.Socket("http://localhost:4567");
   }
 
   describe("Initializing Frame's Websockets", function() {
@@ -68,6 +70,24 @@ $(function() {
       channel.on('event', function() {});
       channel.send('event', 'data');
       channel.broadcast('data');
+    });
+
+    it("should test", function() {
+      var sock1 = getSock();
+      var sock2 = getSock();
+
+      sock1.on('connect', function() {
+        console.log('client connected');
+      });
+      sock1.on('message', function(event, data) {
+        console.log("Received message with :", data);
+      });
+
+      sock1.channel('pingpong').send('ping');
+
+      sock2.channel('pingpoing').send('ping');
+
+      return true
     });
   });
 });

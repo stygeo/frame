@@ -3,6 +3,22 @@ $(function() {
 
   var Channel = undefined;
 
+  var Type = {
+    Disconnect: 0,
+    Message: 1,
+    Json: 2,
+    Event: 3
+  };
+  function unpackMessage(data) {
+    var payload = JSON.parse(data);
+
+    return payload;
+  }
+
+  function packMessage(type, payload, channel) {
+    return JSON.stringify({type: type, data: payload, channel: channel});
+  }
+
   var Socket = Frame.BasicObject.extend({
     constructor: function(url, options) {
       if(!options) options = {};
@@ -23,30 +39,81 @@ $(function() {
       // Check if sockets are supported and throw an error if it isn't.
       if(!('WebSocket' in window)) { throw new Error("WebSockets not supported by browser"); }
 
-      this.webSocket = new WebSocket(url, options.protocols);
+      this.performHandshake(url);
+    },
 
-      this.webSocket.onmessage = _.bind(function(event) {
-        this.handleEvent(event);
-      }, this);
+    performHandshake: function(url) {
+      // Create a url 'parser'
+      var parser = document.createElement("a");
+      parser.href = url;
+
+      // Initialize handshake with host
+      var _this = this;
+      $.ajax({
+        url: url + "/websocket",
+        success: function(data) {
+          data = JSON.parse(data);
+
+          _this.heartbeat = data.beat;
+          _this.socketId = data.id;
+
+          // Enforce ws:// for now
+          var socketUrl = "ws://" + parser.hostname + (parser.port ? ":"+parser.port : "") + "/websocket/" + data.id;
+          _this.createSocket(socketUrl);
+        },
+      }).fail(function(e) {
+        throw new Error("Unable to perform handshake. Socket connection failed");
+      });
+    },
+
+    createSocket: function(url) {
+      this.webSocket = new WebSocket(url);
+
+      this.webSocket.onmessage = _.bind(function(event) {this.onMessage(event);}, this);
 
       this.webSocket.onopen = _.bind(function() {
         this.ready = true;
 
         // Handel all queued send calls that currently on hold.
         for(var i = 0; i < this.queuedData.length; i++) {
-          this._send(this.queuedData[i]);
+          this.deliver(this.queuedData[i]);
         }
       }, this);
 
       this.webSocket.onclose = function(e) {
         console.log("close", e);
       };
+
+      this.webSocket.onerror = function(e) {
+        console.log(e);
+      }
+    },
+
+    onMessage: function(e) {
+      var payload = unpackMessage(e.data);
+      var event;
+
+      switch(payload.type) {
+        // Event handling
+        case Type.Event:
+          var pack = payload.data;
+          event = {event: pack.name, data: pack.data};
+          break;
+
+        // Message handling
+        case Type.Message:
+          event = {event: 'message', data: payload.data}
+          break;
+      }
+
+      this.handleEvent(event, payload.channel);
     },
 
     // Sending data
-    _send: function(data) {
+    deliver: function(data) {
       // Check for ready and queue if not ready.
       if(this.ready) {
+        console.log("sending data", data);
         this.webSocket.send(data);
       } else {
         this.queuedData.push(data);
@@ -55,19 +122,25 @@ $(function() {
       return true;
     },
 
-    handleEvent: function(payload) {
-      var data = JSON.parse(payload);
-      if(data.channel === undefined) {
+    handleEvent: function(data, channel) {
+      if(!channel) {
         this.defaultChannel.handleEvent(data);
       } else {
-        this.channel(data.channel).handleEvent(data);
+        this.channel(channel).handleEvent(data);
       }
     },
 
     // Create and return a new channel with the specified channel name
     // Channels are used to group certain events
     channel: function(channelName) {
-      return this.channels[channelName] || (this.channels[channelName] = new Channel(channelName, this));
+      var channel = this.channels[channelName];
+      if(channel === undefined) {
+        channel = this.channels[channelName] = new Channel(channelName, this);
+
+        this.deliver( packMessage(Type.Event, {name: 'subscribe', data: channelName}) );
+      }
+
+      return channel;
     },
 
     // Substitutes
@@ -109,26 +182,18 @@ $(function() {
     },
 
     _send: function(data) {
-      if(typeof data === 'object') data = JSON.stringify(data);
-
-      this.socket._send(data);
+      console.log('depricated');
     },
 
-    // Sending data
-    send: function(event, data /* TODO , replyCallback */) {
-      var payload = {event: event, data: data, channel: this.name};
+    send: function(data /* TODO , replyCallback */) {
+      var type = (typeof data === 'object' ? Type.Json : Type.Message);
 
-      this._send(payload);
+      this.socket.deliver( packMessage(type, data, this.name) );
 
       return true;
     },
 
-    // Broad cast a message without any event attached
     broadcast: function(data) {
-      var payload = {data: data, channel: this.name};
-
-      this._send(payload);
-
       return true;
     },
   });
