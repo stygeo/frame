@@ -39,7 +39,7 @@ $(function() {
     it("should fire the 'change' event when a title changed", function() {
       var passed = false;
       var book = new Book();
-      book.on('title:changed',  function() {
+      book.on('title:change',  function() {
         passed = true;
       });
       book.title = 'Some title';
