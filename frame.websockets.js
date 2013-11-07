@@ -184,16 +184,21 @@ $(function() {
       console.log('depricated');
     },
 
-    send: function(data /* TODO , replyCallback */) {
-      var type = (typeof data === 'object' ? Type.Json : Type.Message);
+    send: function(event, data /* TODO , replyCallback */) {
+      //var type = (typeof data === 'object' ? Type.Json : Type.Message);
 
-      this.socket.deliver( packMessage(type, data, this.name) );
+      this.socket.deliver( packMessage(Type.Event, {name: event, data: data}, this.name) );
 
       return true;
     },
 
     broadcast: function(data) {
       return true;
+    },
+
+    // The channel method on the channel objects allows us to chain.
+    channel: function(channelName) {
+      return this.socket.channel(channelName);
     },
   });
   _.extend(Channel.prototype, Frame.EventTarget);
