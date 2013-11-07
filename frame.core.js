@@ -199,7 +199,7 @@ $(function() {
       for(var i = 0; i < events.length; i++) {
         var v = events[i]
 
-        if(v !== undefined) v.callback.call(v.scope || this, this, customEvent);
+        if(v !== undefined) v.callback.call(v.scope || this, customEvent, data);
       }
     },
   };
@@ -335,6 +335,13 @@ $(function() {
       }
 
       return attributes;
+    },
+
+    // Sync the object with the server. (Only used by SocketStore)
+    sync: function(options) {
+      options = options || {};
+
+      Frame.defaultStore.sync(this, options);
     },
 
     // Validates the model (not the model's fields), such as URL.
