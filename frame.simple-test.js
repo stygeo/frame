@@ -26,9 +26,8 @@ $(function() {
     window.currentTest = {success: 0, failed: 0, skipped: 0};
 
 
-    var testMessage = "Test: "+testDescription;
-    $("body").append($("<h3/>").text(testMessage));
-    console.log(testMessage);
+    $("body").append($("<h3/>").text(testDescription));
+    console.log(testDescription);
 
     callback();
 
