@@ -288,7 +288,7 @@ $(function() {
   var Model = BasicObject.extend({
     constructor: function(attributes, options) {
       // Call the basic object's constructor.
-      BasicObject.call(this);
+      BasicObject.call(this, attributes);
 
       // Define this as a new model.
       this.isNew = true;
