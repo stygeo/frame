@@ -8,6 +8,22 @@ require './helpers'
 class SocketBackend
   KEEPALIVE_TIME = 15
 
+  class << self
+    attr_accessor :events
+
+    def setup
+      @events = {}
+
+      yield self
+    end
+
+    def on(event, &block)
+      @events[event] ||= []
+
+      @events[event] << block
+    end
+  end
+
   def initialize(app)
     @app = app
     @clients = {}
@@ -41,11 +57,19 @@ class SocketBackend
 
         case data["type"]
         when Type::EVENT
-          if data["data"]["name"] == 'subscribe'
+          event = data["data"]["name"].to_sym
+          if event == :subscribe
             channel = (@channels[data["data"]["data"]] ||= {})
             channel[socket_id] = @clients[socket_id]
+          else
+            if SocketBackend.events[event]
+              SocketBackend.events[event].each do |block|
+                block.call(@clients)
+              end
+            end
           end
         when Type::MESSAGE
+
           if data["channel"] && @channels[data["channel"]]
             to_call = proc { @channels[data["channel"]].each { |sock_id, client| client[:socket].send( pack_message(Type::MESSAGE, data["data"], nil, data["channel"]) ) } }
           else
@@ -79,6 +103,14 @@ class App < Sinatra::Base
   set :channels, {}
 
   configure do
+    SocketBackend.setup do |socket|
+      socket.on :test_event do |clients|
+        data = { action: 'update', resource: 'books', data: {id: 1, title: 'bar title'} }
+
+        clients.each {|sock_id, client| client[:socket].send( pack_message(Type::EVENT, 'resource:store:modification', data) ) }
+      end
+    end
+
     use SocketBackend
   end
 
