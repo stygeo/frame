@@ -73,12 +73,9 @@ $(function() {
     //});
     //
     // Todo move this
-    function camelCase(input) {
-      return input.toLowerCase().replace(/-(.)/g, function(match, group1) {
-        return group1.toUpperCase();
-      });
-    }
     it("should test", function() {
+      var Book = Frame.BasicObject.extend(['id', 'title']);
+
       var sock1 = getSock();
       var sock2 = getSock();
 
@@ -92,7 +89,7 @@ $(function() {
           // It was a resource
           switch(data.action) {
             case 'update':
-              var klass = camelCase(data.resource.singularize());
+              var klass = data.resource.singularize().camelCase();
               klass.trigger("update:"+data.data.id, data.data);
               break;
           }
@@ -100,6 +97,7 @@ $(function() {
       });
 
       return true
+
     });
   });
 });

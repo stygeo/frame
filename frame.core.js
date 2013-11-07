@@ -49,6 +49,11 @@ $(function() {
   String.prototype.singularize = function() {
     return (this[this.length-1] === 's' ? this.substr(0, this.length - 1) : this);
   }
+  String.prototype.camelCase = function() {
+    return this.toLowerCase().replace(/-(.)/g, function(match, group1) {
+      return group1.toUpperCase();
+    });
+  };
 
   // Creates a shared instance method
   function createDefaultInstanceMethodOn(object) {
@@ -261,6 +266,7 @@ $(function() {
       }
     },
   });
+  _.extend(BasicObject, EventTarget);
   _.extend(BasicObject.prototype, EventTarget);
 
   // Public property setter. Creates specialized properties which can be accessed through KVC and make use of KVO
