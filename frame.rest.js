@@ -20,6 +20,9 @@ $(function() {
         object.isNew = false;
 
         if(originalSuccess) originalSuccess.call(object, data, textStatus, xhr);
+
+        // Trigger fetch event
+        object.trigger("fetch");
       };
 
       this.findByQueryWithUrl(parameters, url, options);
