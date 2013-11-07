@@ -20,7 +20,7 @@ $(function() {
       this.dateModel = new DateModel({date: new Date()});
 
       // Add an observer to the date field
-      this.dateModel.addObserverForKey('date', _.bind(this.update, this));
+      this.dateModel.on('date:changed', _.bind(this.update, this));
     },
 
     // Draw method
@@ -32,7 +32,7 @@ $(function() {
       this.dateModel.date = new Date();
     },
 
-    // Update method. Called from addObserverForKey
+    // Update method. Called from observer
     update: function() {
       var self = this;
 
