@@ -111,44 +111,119 @@ $(function() {
     return new F();
   };
 
+  /* Basic event target */
+  var EventTarget = {
+    events: function(event) {
+      if(this._events === undefined) this._events = {};
+
+      // Return the event property or return the event list based on the argument
+      if(event !== undefined) {
+        // Set a default array
+        if(this._events[event] === undefined) this._events[event] = [];
+
+        return this._events[event];
+      }
+      else return this._events;
+    },
+
+    /*
+     * On (event)
+     * event: the event
+     * callback: callback to invoke upon 'trigger'
+     * scope: object used for 'call' method.
+     */
+    on: function(event, callback, scope) {
+      // Push the callback to the event stack
+      var eventListeners = this.events(event);
+      eventListeners.push({callback: callback, scope: scope});
+
+      // Return the collection so we may chain
+      return this;
+    },
+    off: function(event, callback) {
+      if(callback === undefined) {
+        this.events(event).length = 0;
+      } else if(typeof callback === 'function') {
+        for(var i = 0; i < this.events(event).length; i++) {
+          var v = this.events(event)[i];
+          if(v.callback === callback) {
+            this.events(event).splice(i, 1);
+            break;
+          }
+        }
+      // If callback is object it's an key value hash
+      } else if(typeof callback === 'object') {
+        var object = event,
+            options = callback;
+        if('all' in options && options.all) {
+          var events = this._events;
+          // Find all observers
+          for(var event in events) {
+            var allObservers = [];
+            var observers = events[event];
+            // Loop over each observer
+            for(var i = 0; i < observers.length; i++) {
+              var v = observers[i];
+              // The event must be an object of some sort
+              if(v.scope === object) {allObservers.push(v);}
+            }
+
+            // Remove the observers
+            for(var i = 0; i < allObservers.length; i++) {
+              events[event].splice(events[event].indexOf(allObservers[i]), 1);
+            }
+          }
+
+        }
+      }
+    },
+
+    /*
+     * Trigger (event)
+     * Trigger a specific event
+     * event: event you'd like to trigger
+     */
+    trigger: function(event, data) {
+      var customEvent = new CustomEvent(event);
+      customEvent.customData = data;
+
+      // Loop over each event-callback and invoke the callback (w/ optionally the scope)
+      var events = this.events(event);
+      for(var i = 0; i < events.length; i++) {
+        var v = events[i]
+
+        if(v !== undefined) v.callback.call(v.scope || this, this, customEvent);
+      }
+    },
+  };
+
   var Construct = function(){};
   Construct.extend = __extend;
 
   // Basic low level object. Contains most low level object functions such as KVO & KVC.
   var BasicObject = Construct.extend({
-    constructor: function(options) {
+    constructor: function(attributes) {
       /* These values are not meant to be KVO. */
       // Determines whether this object is a basic object so you can distinguish them from regular objects.
      // this.basicObjectDefined=true
       // The current id of the object
       this.gid = __gid();
+
+      // Serialize the attributes
+      this.serialize(attributes);
     },
 
     properties: function() {
       return this._properties || (this._properties = {})
     },
 
-    observers: function() {
-      return this._observers || (this._observers = {})
-    },
-
     // Specialized setter. Calls callbacks on observed values
     setProperty: function(key, value) {
+      var isNew = !this.properties()[key];
+
       this.properties()[key] = value
 
-      if(this.observers[key] && this.observers[key].length > 0) {
-        for(var i = 0; i < this.observers[key].length; i++) {
-          var observer = this.observers[key][i]
-          if(observer !== undefined) {
-            // Signal the observer or call the callback
-            if($.isFunction(observer)) {
-              observer.call(this, key, value);
-            } else {
-              observer.observeValueForKey.call(observer, key, value)
-            }
-          }
-        }
-      }
+      this.trigger("" + key + ":" + (isNew? 'new' : 'changed'));
     },
 
     // Basic object getter
@@ -165,36 +240,24 @@ $(function() {
       this.setProperty(key, value_or_key)
     },
 
-    // Observe the given key. (Key Value Observing, KVO)
-    addObserverForKey: function(observerOrKey, keyOrCallback, options) {
-      var observer, key;
-      if(__isString(observerOrKey) && $.isFunction(keyOrCallback)) {
-        observer = keyOrCallback;
-        key = observerOrKey;
-      } else {
-        observer = observerOrKey;
-        key = keyOrCallback;
-      }
+    // Serialization of attributes
+    serialize: function(serializableAttributes) {
+      // Get the current object's constructor so we can bind values to it.
+      var objectClass = this.constructor;
 
-      if(this.observers[key] === undefined) {
-        this.observers[key] = []
-      }
-
-      this.observers[key].push(observer)
-    },
-
-    // Remove the given observer with the specified key
-    removeObserverForKey: function(observer, key) {
-      if(this.observers[key]) {
-        for(var i = 0; i < this.observers[key].length; i++) {
-          if(this.observers[key][i] === observer) {
-            delete this.observers[key][i]
-            break
-          }
+      // Iterate over the retrieved attributes
+      for(var key in serializableAttributes) {
+        if(!(key in objectClass)) {
+          // Model attributes are 'lazily' added.
+          objectClass.property(key);
         }
+
+        // Assign the attributes value
+        this.valueForKey(serializableAttributes[key], key);
       }
     },
   });
+  _.extend(BasicObject.prototype, EventTarget);
 
   // Public property setter. Creates specialized properties which can be accessed through KVC and make use of KVO
   BasicObject.property = function(propertyNames) {
@@ -225,14 +288,10 @@ $(function() {
   var Model = BasicObject.extend({
     constructor: function(attributes, options) {
       // Call the basic object's constructor.
-      BasicObject.call(this, options);
+      BasicObject.call(this);
 
       // Define this as a new model.
       this.isNew = true;
-
-      // Serialize the attributes
-      this.serialize(attributes);
-
     },
 
     fetch: function(parameters, options) {
@@ -255,21 +314,6 @@ $(function() {
       Frame.defaultStore.destroy(this, options);
     },
 
-    serialize: function(serializableAttributes) {
-      // Get the current object's constructor so we can bind values to it.
-      var objectClass = this.constructor;
-
-      // Iterate over the retrieved attributes
-      for(var key in serializableAttributes) {
-        if(!(key in objectClass)) {
-          // Model attributes are 'lazily' added.
-          objectClass.property(key);
-        }
-
-        // Assign the attributes value
-        this.valueForKey(serializableAttributes[key], key);
-      }
-    },
 
     // Copies the attributes of the model to a new object.
     toJSON: function() {
@@ -325,7 +369,7 @@ $(function() {
       if(!options) options = {};
 
       // Call the basic object's constructor.
-      BasicObject.call(this, options);
+      BasicObject.call(this);
 
       // Set the element of the controller
       this.el = options.el;
@@ -491,7 +535,7 @@ $(function() {
       if(!options) options = {};
 
       // Call the basic object's constructor.
-      BasicObject.call(this, options);
+      BasicObject.call(this);
 
       this.el = options.el;
       this.viewControllers = [];
@@ -572,90 +616,6 @@ $(function() {
   });
 
 
-  var EventTarget = {
-    // EXPERIMENTAL
-    events: function(event) {
-      if(this._events === undefined) this._events = {};
-
-      // Return the event property or return the event list based on the argument
-      if(event !== undefined) {
-        // Set a default array
-        if(this._events[event] === undefined) this._events[event] = [];
-
-        return this._events[event];
-      }
-      else return this._events;
-    },
-
-    /*
-     * On (event)
-     * event: the event
-     * callback: callback to invoke upon 'trigger'
-     * scope: object used for 'call' method.
-     */
-    on: function(event, callback, scope) {
-      // Push the callback to the event stack
-      var eventListeners = this.events(event);
-      eventListeners.push({callback: callback, scope: scope});
-
-      // Return the collection so we may chain
-      return this;
-    },
-    off: function(event, callback) {
-      if(callback === undefined) {
-        this.events(event).length = 0;
-      } else if(typeof callback === 'function') {
-        for(var i = 0; i < this.events(event).length; i++) {
-          var v = this.events(event)[i];
-          if(v.callback === callback) {
-            this.events(event).splice(i, 1);
-            break;
-          }
-        }
-      // If callback is object it's an key value hash
-      } else if(typeof callback === 'object') {
-        var object = event,
-            options = callback;
-        if('all' in options && options.all) {
-          var events = this._events;
-          // Find all observers
-          for(var event in events) {
-            var allObservers = [];
-            var observers = events[event];
-            // Loop over each observer
-            for(var i = 0; i < observers.length; i++) {
-              var v = observers[i];
-              // The event must be an object of some sort
-              if(v.scope === object) {allObservers.push(v);}
-            }
-
-            // Remove the observers
-            for(var i = 0; i < allObservers.length; i++) {
-              events[event].splice(events[event].indexOf(allObservers[i]), 1);
-            }
-          }
-
-        }
-      }
-    },
-
-    /*
-     * Trigger (event)
-     * Trigger a specific event
-     * event: event you'd like to trigger
-     */
-    trigger: function(event, data) {
-      var customEvent = new CustomEvent(event);
-      customEvent.customData = data;
-
-      // Loop over each event-callback and invoke the callback (w/ optionally the scope)
-      for(var i = 0; i < this.events(event).length; i++) {
-        var v = this.events(event)[i]
-
-        if(v !== undefined) v.callback.call(v.scope || this, this, customEvent);
-      }
-    },
-  };
 
   // Experimental collection
   var __emptyArray = [];

@@ -2,6 +2,14 @@ $(function() {
   var Book = Frame.BasicObject.extend({});
   Book.property('title');
 
+  describe("BasicObject properties", function() {
+    it("should serialize attributes upon passing it to the constructor", function() {
+      var book = new Book({title: 'Foo'});
+
+      return book.title !== undefined;
+    });
+  });
+
   describe("BasicObject observer pattern", function() {
     it("should fire a 'new' event when a attribute is set for the first time", function() {
       var passed = false;
