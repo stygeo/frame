@@ -75,7 +75,7 @@ $(function() {
   });
 
   describe("Collection initialization", function() {
-    it('should threat optional arguments as array', function() {
+    it('should tread optional arguments as array', function() {
       var c = new Frame.Collection(1,2);
       return c.length === 2;
     });
