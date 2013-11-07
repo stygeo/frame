@@ -11,6 +11,8 @@ $(function() {
 
     // Fetch given resource
     fetch: function(object, parameters, options) {
+      if(!options) options = {};
+
       var url = this.urlForObject(object);
       var originalSuccess = options.success;
       options.data = parameters;
@@ -29,6 +31,8 @@ $(function() {
     },
 
     add: function(object, options) {
+      if(!options) options = {};
+
       var url = this.urlForObject(object);
       var originalSuccess = options.success;
 
@@ -47,6 +51,8 @@ $(function() {
     },
 
     update: function(object, options) {
+      if(!options) options = {};
+
       var url = this.urlForObject(object);
       var originalSuccess = options.success;
 
@@ -63,6 +69,8 @@ $(function() {
     },
 
     destroy: function(object, options) {
+      if(!options) options = {};
+
       var url = this.urlForObject(object);
       var originalSuccess = options.success;
 
@@ -73,6 +81,8 @@ $(function() {
     },
 
     all: function(collection, model, options) {
+      if(!options) options = {};
+
       var url = this.urlForObject(model);
       var originalSuccess = options.success;
 
