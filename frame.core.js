@@ -223,7 +223,9 @@ $(function() {
 
       this.properties()[key] = value
 
-      this.trigger("" + key + ":" + (isNew? 'new' : 'changed'));
+      if(isNew) { this.trigger("" + key + ":new"); }
+
+      this.trigger("" + key + ":change");
     },
 
     // Basic object getter
@@ -279,7 +281,6 @@ $(function() {
       }
     }
   }
-
 
   /*
    * Frame.Model data object.
@@ -657,7 +658,6 @@ $(function() {
       // Splat argument array
       a = Array.prototype.slice.call(arguments, 0);
     }
-    console.log('length is', a.length);
 
     if(a.length > 0) __emptyArray.push.apply(this, a);
   }
