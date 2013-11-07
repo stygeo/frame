@@ -113,7 +113,6 @@ $(function() {
     deliver: function(data) {
       // Check for ready and queue if not ready.
       if(this.ready) {
-        console.log("sending data", data);
         this.webSocket.send(data);
       } else {
         this.queuedData.push(data);
