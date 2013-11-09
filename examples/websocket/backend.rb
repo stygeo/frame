@@ -55,14 +55,21 @@ module Frame
     end
 
     def send(event_type, data)
-      @sockets.each do |socket|
-        socket.send(event_type, data, @name)
+      EM.next_tick do
+        @sockets.each do |socket|
+          socket.send(event_type, data, @name)
+        end
       end
     end
 
     def each
       return @sockets.each(&block)
     end
+  end
+
+  # [] is a shortcut
+  def self.[](val)
+    SocketBackend.backend.channel(val)
   end
 
   class SocketBackend
@@ -137,9 +144,9 @@ module Frame
               if SocketBackend.events[event]
                 SocketBackend.events[event].each do |block|
                   if data["channel"] && @channels[data["channel"]]
-                    block.call(Group.new(@channels[data["channel"]].values, data["channel"]))
+                    block.call(Group.new(@channels[data["channel"]].values, data["channel"]), data["data"]["data"])
                   else
-                    block.call(Group.new(@clients.values), nil)
+                    block.call(Group.new(@clients.values, nil), data["data"]["data"])
                   end
                 end
               end
@@ -169,7 +176,9 @@ module Frame
       else
         # Handshake
         if req.path == '/websocket'
-          return [200, { 'Content-Type' => 'application/json' }, [ {id: self.generate_gid, beat: 10}.to_json ]]
+          gid = self.generate_gid
+
+          return [200, { 'Content-Type' => 'application/json' }, [ {id: gid, beat: 10}.to_json ]]
         else
           @app.call(env)
         end
@@ -195,7 +204,8 @@ module Frame
               self.old_save
 
               data = { action: 'update', resource: self.resource_name, data: self.attributes }
-              Frame::SocketBackend.backend.channel(self.socket_sync_channel).send('resource_sync', data)
+
+              Frame[self.socket_sync_channel].send('resource_sync', data)
             end
           end
         end
