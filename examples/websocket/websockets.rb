@@ -6,6 +6,26 @@ require './backend'
 # Fake rails
 module ActiveRecord
   class Base
+    attr_accessor :resource_name, :attributes
+
+    def initialize(attributes = {})
+      self.resource_name = "book"
+      self.attributes = attributes
+
+      attributes.each do |key, value|
+        self.class.send(:attr_accessor, key) unless self.respond_to? key
+
+        self.instance_variable_set "@#{key}", value
+      end
+    end
+
+    def title() @title end
+    def title=(title)
+      self.attributes[:title] = title
+
+      @title = title
+    end
+
     def save
       # Persisting data to database from rails would go here
     end
@@ -22,21 +42,7 @@ end
 class Book < ActiveRecord::Base
   include Frame::Model
 
-  attr_accessor :resource_name, :attributes
-
   socket_sync proc { |book| "student-#{book.student_id}" }
-
-  def initialize(attributes = {})
-    self.resource_name = "book"
-    self.attributes = attributes
-
-    attributes.each do |key, value|
-      self.class.send(:attr_accessor, key) unless self.respond_to? key
-
-      self.instance_variable_set "@#{key}", value
-    end
-  end
-
 end
 
 class App < Sinatra::Base
@@ -45,8 +51,11 @@ class App < Sinatra::Base
 
   configure do
     Frame::SocketBackend.setup do |socket|
-      socket.on :test_event do |group|
+      socket.on :test_event do |group, data|
         resource = Book.find(1)
+        if data && data["title"]
+          resource.title = data["title"]
+        end
 
         resource.save
       end

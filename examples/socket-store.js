@@ -33,22 +33,21 @@ $(function() {
       Frame.defaultStore = socketStore
 
       var book = new Book({id: 1, title: 'my title'});
-      console.log("Book title before 'test_event' is fired:", book.title);
+      window.book = book;
+
       book
         .on('title:change', function() {
           console.log("Book title after 'test_event' is fired:", this.title);
         })
         .on('sync', function() {
           // Triggered once the object has changed by the server
+          console.log("sync");
         })
         // Establish a sync with the server. This means the object will be kept in sync at all times.
         // Something changes on the server it will be set client side and visa versa
         .sync();
 
-      socket.send('test_event');
-
       return true
-
     });
   });
 });
