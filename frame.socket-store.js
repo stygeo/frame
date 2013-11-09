@@ -16,11 +16,11 @@ $(function() {
       this.registeredObjects = {}
 
       // Register the 'message' callback so we can intercept new resources
-      var binding;
-      if(this.channelName) { binding = this.socket.channel(this.channelName); }
-      else { this.socket; }
+      this.binding = undefined;
+      if(this.channelName) { this.binding = this.socket.channel(this.channelName); }
+      else { this.binding = this.socket; }
 
-      binding.on('resource_sync', _.bind(this.processData, this));
+      this.binding.on('resource_sync', _.bind(this.processData, this));
     },
 
     // Register a class the store can bind function to it such as incoming new resources
@@ -55,6 +55,26 @@ $(function() {
 
         object.trigger('sync');
       });
+    },
+
+    persist: function(object, options) {
+      var payload;
+      // The action being used is based on the id of the object
+      if(object.id) {
+        payload = {resource: object.resource, action: 'update', id: object.id, data: object.toJSON()}
+      } else {
+        payload = {resource: object.resource, action: 'new', data: object.toJSON()}
+      }
+
+      this.binding.send('resource_sync', payload);
+    },
+
+    add: function(object, options) {
+      this.persist(object, options);
+    },
+
+    update: function(object, options) {
+      this.persist(object, options);
     },
   });
   _.extend(SocketStore.prototype, Frame.EventTarget);
