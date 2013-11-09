@@ -52,7 +52,7 @@ $(function() {
       $.ajax({
         url: url + "/websocket",
         success: function(data) {
-          data = JSON.parse(data);
+          if(typeof data !== 'object') { data = JSON.parse(data); }
 
           _this.heartbeat = data.beat;
           _this.socketId = data.id;

@@ -20,7 +20,7 @@ $(function() {
       if(this.channelName) { binding = this.socket.channel(this.channelName); }
       else { this.socket; }
 
-      this.socket.on('resource:store:modification', _.bind(this.processData, this));
+      binding.on('resource_sync', _.bind(this.processData, this));
     },
 
     // Register a class the store can bind function to it such as incoming new resources
