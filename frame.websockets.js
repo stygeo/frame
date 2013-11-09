@@ -50,6 +50,7 @@ $(function() {
       // Initialize handshake with host
       var _this = this;
       $.ajax({
+        cache: false,
         url: url + "/websocket",
         success: function(data) {
           if(typeof data !== 'object') { data = JSON.parse(data); }
