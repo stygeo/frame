@@ -101,9 +101,10 @@ module Frame
       Faye::WebSocket.load_adapter('thin')
     end
 
-    def generate_gid(length = 12)
-      o = [(0..9), ('a'..'z'), (0..9)].map { |i| i.to_a }.flatten
-      (0...length).map{ o[rand(o.length)] }.join
+    def generate_gid(length = 6)
+      #o = [(0..9), ('a'..'z'), (0..9)].map { |i| i.to_a }.flatten
+      #(0...length).map{ o[rand(o.length)] }.join
+      SecureRandom.hex length
     end
 
     def channel(name)
