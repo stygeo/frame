@@ -40,9 +40,12 @@ $(function() {
             }
             break;
 
+          case 'sync':
           case 'update':
             this.trigger([data.resource.singularize(), data.data.id, 'update'].join(":"), data.data);
+            console.log('update')
             break;
+          case 'sync':
         }
       }
     },
@@ -55,6 +58,10 @@ $(function() {
 
         object.trigger('sync');
       });
+
+      var payload = {resource: object.resource, action: 'show', data: {id: object.id}};
+
+      this.binding.send('resource_sync', payload);
     },
 
     persist: function(object, options) {
