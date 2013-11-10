@@ -30,6 +30,14 @@ module ActiveRecord
       # Persisting data to database from rails would go here
     end
 
+    def update_attributes attributes
+      attributes.each do |key, val|
+        self.attributes[key] = val
+      end
+
+      self.save
+    end
+
     class << self
       def find(id)
         return self.new({id: 1, title: 'bar title', student_id: 1234})
@@ -45,11 +53,23 @@ class Book < ActiveRecord::Base
   socket_sync proc { |book| "student-#{book.student_id}" }
 end
 
+class BooksSocketController < Frame::SocketController
+  def update
+    resource = Book.find(params[:id])
+
+    resource.update_attributes params[:book]
+  end
+end
+
 class App < Sinatra::Base
   set :sessions, true
   set :server, 'thin'
 
   configure do
+    Frame::Router.config do |c|
+      c.resource :books
+    end
+
     Frame::SocketBackend.setup do |socket|
       socket.on :test_event do |group, data|
         resource = Book.find(1)
