@@ -42,8 +42,7 @@ $(function() {
 
           case 'sync':
           case 'update':
-            this.trigger([data.resource.singularize(), data.data.id, 'update'].join(":"), data.data);
-            console.log('update')
+            this.trigger([data.resource.singularize(), data.data.id, 'sync'].join(":"), data.data);
             break;
           case 'sync':
         }
@@ -53,7 +52,7 @@ $(function() {
     // Sync
     sync: function(object, options) {
       // Bind a event on self so whenever the objects gets updated we can call 'sync' on the object
-      this.on([object.resource, object.id, 'update'].join(":"), function(event, data) {
+      this.on([object.resource, object.id, 'sync'].join(":"), function(event, data) {
         object.serialize(data);
 
         object.trigger('sync');
