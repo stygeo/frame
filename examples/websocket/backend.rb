@@ -1,6 +1,11 @@
 require 'faye/websocket'
-require './helpers'
 require 'json'
+
+require 'active_support/core_ext'
+require 'active_support/inflector'
+require 'active_support/hash_with_indifferent_access'
+
+String.send(:include, ActiveSupport::Inflector)
 
 module Frame
   module Type
@@ -79,12 +84,13 @@ module Frame
       attr_accessor :events, :backend
 
       def setup
-        @events = {}
 
         yield self
       end
 
       def on(event, &block)
+        @events ||= {}
+
         @events[event] ||= []
 
         @events[event] << block
@@ -99,6 +105,8 @@ module Frame
       @channels = {}
 
       Faye::WebSocket.load_adapter('thin')
+
+      self.bind_default_events
     end
 
     def generate_gid(length = 6)
@@ -109,6 +117,21 @@ module Frame
 
     def channel(name)
       Group.new(@channels[name] ? @channels[name].values : [], name)
+    end
+
+    def bind_default_events
+      self.class.on :resource_sync do |group, data|
+        resource = data["resource"]
+        action   = data["action"]
+
+        controller = Frame::Router.route_resource! resource, action
+
+        controller.params = data["data"]
+
+        puts controller.inspect
+
+        controller.perform!
+      end
     end
 
     def call(env)
@@ -126,11 +149,18 @@ module Frame
 
           @clients[socket_id] = socket
 
+          if(req.params['channels'] && req.params['channels'].is_a?(Array))
+            req.params['channels'].each do |channel_name|
+              channel = (@channels[channel_name.to_sym] ||= {})
+              channel[channel_name.to_sym] = socket
+            end
+          end
+
           socket.send('connect', nil)
         end
 
         ws.on :message do |event|
-          data = unpack_message(event.data)
+          data = JSON.parse(event.data)
           puts "Rx: #{data}"
 
           to_call = nil
@@ -154,11 +184,11 @@ module Frame
             end
           when Type::MESSAGE
 
-            if data["channel"] && @channels[data["channel"]]
-              to_call = proc { @channels[data["channel"]].each { |sock_id, client| client[:socket].send( pack_message(Type::MESSAGE, data["data"], nil, data["channel"]) ) } }
-            else
-              to_call = proc { @clients.each { |sock_id, client| client[:socket].send( pack_message(Type::MESSAGE, data["data"]) ) } }
-            end
+            #if data["channel"] && @channels[data["channel"]]
+              #to_call = proc { @channels[data["channel"]].each { |sock_id, client| client[:socket].send( pack_message(Type::MESSAGE, data["data"], nil, data["channel"]) ) } }
+            #else
+              #to_call = proc { @clients.each { |sock_id, client| client[:socket].send( pack_message(Type::MESSAGE, data["data"]) ) } }
+            #end
           end
 
           if to_call
@@ -208,6 +238,12 @@ module Frame
 
               Frame[self.socket_sync_channel].send('resource_sync', data)
             end
+
+            def sync
+              data = { action: 'sync', resource: self.resource_name, data: self.attributes }
+
+              Frame[self.socket_sync_channel].send('resource_sync', data)
+            end
           end
         end
 
@@ -222,6 +258,55 @@ module Frame
         channel.call(self)
       else
         channel
+      end
+    end
+  end
+
+  class SocketController
+    attr_accessor :params
+
+    def params= data
+      @params ||= ActiveSupport::HashWithIndifferentAccess.new
+      @params[@resource_name] = data
+
+      @params[:id] = data["id"] if data["id"]
+    end
+
+    def set_action action, resource_name
+      @resource_name = resource_name.to_sym
+
+      @performing_action = action
+    end
+
+    def perform!
+      self.send @performing_action
+    end
+  end
+
+  module Router
+    @@resources = []
+
+    def self.config
+      yield self
+    end
+
+    def self.resource resource_name
+      @@resources << resource_name.to_sym
+    end
+
+    def self.route_resource! resource_name, action
+      @@resources.include? resource_name.to_sym
+
+      resource_class = "#{resource_name.pluralize}_socket_controller".camelcase
+      begin
+        klass = resource_class.constantize
+
+        instance = klass.new
+        instance.set_action action, resource_name.singularize
+
+        return instance
+      #rescue
+      #  raise "Expected class `#{resource_class}` to be defined"
       end
     end
   end

@@ -25,6 +25,8 @@ $(function() {
       // Call super
       Frame.BasicObject.call(this);
 
+      this.predefChannels = options.channels;
+
       // Indicator whether the socket is ready (for sending data).
       this.ready = false;
       // Queued data for sending if the connection isn't ready (yet).
@@ -68,6 +70,9 @@ $(function() {
     },
 
     createSocket: function(url) {
+      if(this.predefChannels) {
+        url += "?"+ $.param({channels: this.predefChannels});
+      }
       this.webSocket = new WebSocket(url);
 
       this.webSocket.onmessage = _.bind(function(event) {this.onMessage(event);}, this);
