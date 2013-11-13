@@ -36,10 +36,19 @@ $(function() {
   __gid = function(prefix) {
     var GID = (++__currentGID).toString();
     if(prefix) {
-      GID = prefex+"-"+GID;
+      GID = prefix+"-"+GID;
     }
 
     return GID;
+  }
+
+  var pushState = window.history.pushState;
+  window.history.pushState = function(state) {
+    var r = pushState.apply(window.history, arguments);
+
+    $(window).trigger('pushstate', state);
+
+    return r;
   }
 
   // Inflectors
@@ -400,7 +409,7 @@ $(function() {
       this.routes = [];
 
       // Bind all for hashChanged
-      this.boundHashChanged = _.bind(this.hashChanged, this);
+      this.boundPopstate = _.bind(this.popstate, this);
 
       this.enable();
 
@@ -409,10 +418,10 @@ $(function() {
 
     go: function(url, title) {
       //window.location.hash = "#!"+url;
-      window.history.pushState({}, title || window.document.title, url);
+      window.history.pushState(null, title || window.document.title, url);
     },
 
-    hashChanged: function(e) {
+    popstate: function(e) {
       var hash = this.hash();
       for(var i = 0; i < this.routes.length; i++) {
         var route = this.routes[i];
@@ -457,7 +466,6 @@ $(function() {
     },
 
     hash: function() {
-      //var cleanSplit = window.location.hash.split("#!")[1];
       var path = window.location.pathname;
       if(path === undefined) return '';
       else return path;
@@ -476,14 +484,14 @@ $(function() {
 
     disable: function() {
       // Remove event listener
-      //$(window).off('hashchange', this.boundHashChanged);
-      $(window).off('popstate', this.boundHashChanged);
+      $(window).off('popstate', this.boundPopstate);
+      $(window).off('pushstate', this.boundPopstate);
     },
 
     enable: function() {
       // Bind on hash change event on window to get notified once a hash has changed
-      //$(window).on('hashchange', this.boundHashChanged);
-      $(window).on('popstate', this.boundHashChanged);
+      $(window).on('popstate', this.boundPopstate);
+      $(window).on('pushstate', this.boundPopstate);
     },
 
     // Disables and removed all events
