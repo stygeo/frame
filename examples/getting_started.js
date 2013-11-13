@@ -85,6 +85,7 @@ $(function() {
       Frame.ViewController.call(this, options);
 
       // Set up anything controller related. Views can be set up from within the viewDidLoad method.
+      this.router.route('/date/:action', this.addDate);
     },
 
     // Set up your view and load any content that needs to be displayed on the view.
@@ -149,6 +150,18 @@ $(function() {
         alert("Oh, hello there, sir");
       });
       this.view.addSubview(helloButton);
+
+      var addDateButton = new Frame.Button({text: "Add date"});
+      addDateButton.on('click', function() { _this.router.go("/date/new"); });
+      this.view.addSubview(addDateButton);
+    },
+
+    addDate: function(action) {
+      switch(action) {
+        case 'new':
+          this.view.$.append($("<div/>").html("caught /date/:action route. With action being: "+action));
+          break;
+      }
     }
   });
 
