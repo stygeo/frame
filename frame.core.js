@@ -770,7 +770,7 @@ $(function() {
   Object.defineProperty(ViewController.prototype, 'router', {
     enumerable: true,
     get: function() {
-      if(this._router === undefined) this._router = new Router();
+      if(this._router === undefined) this._router = new Router(this);
 
       return this._router;
     },
