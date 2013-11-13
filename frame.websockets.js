@@ -70,9 +70,11 @@ $(function() {
     },
 
     createSocket: function(url) {
+      // Append predefined channels to the url
       if(this.predefChannels) {
         url += "?"+ $.param({channels: this.predefChannels});
       }
+
       this.webSocket = new WebSocket(url);
 
       this.webSocket.onmessage = _.bind(function(event) {this.onMessage(event);}, this);

@@ -161,9 +161,26 @@ $(function() {
       // If callback is object it's an key value hash
       } else if(typeof callback === 'object') {
         var object = event,
-            options = callback;
-        if('all' in options && options.all) {
-          var events = this._events;
+            options = callback,
+            events = this._events;
+
+        if('for' in options && options.for) {
+          for(var event in events) {
+            var observers = events[event];
+
+            for(var i = 0; i < observers.length; i++) {
+              var observer = observers[i];
+
+              if(typeof observer.scope === 'object') {
+                observers.splice(i, 1);
+                // Restart the loop, because the index has changed
+                i = 0;
+              }
+            }
+          }
+        }
+
+        else if('all' in options && options.all) {
           // Find all observers
           for(var event in events) {
             var allObservers = [];
@@ -172,7 +189,7 @@ $(function() {
             for(var i = 0; i < observers.length; i++) {
               var v = observers[i];
               // The event must be an object of some sort
-              if(v.scope === object) {allObservers.push(v);}
+              if(typeof v.scope === 'object') {allObservers.push(v);}
             }
 
             // Remove the observers
@@ -357,6 +374,125 @@ $(function() {
     Frame.defaultStore.all(collection, this, options);
   };
 
+  var NotificationCenter = BasicObject.extend({
+    // Overwrite on and off to ensure certain variables
+    on: function(event, object, method) {
+
+      BasicObject.on.call(this, event, method, object);
+    },
+
+    off: function(event, object) {
+      BasicObject.off.call(this, event, {for: object})
+    }
+  });
+  createDefaultInstanceMethodOn(NotificationCenter);
+
+  /*
+   * Hash handler
+   */
+  var Router = BasicObject.extend({
+    constructor: function(scope) {
+      BasicObject.call(this);
+
+      // The scope used for this argument when calling the handlers
+      this.scope = scope;
+      // Routes currently in operative for this hash handler
+      this.routes = [];
+
+      // Bind all for hashChanged
+      this.boundHashChanged = _.bind(this.hashChanged, this);
+
+      this.enable();
+
+      //_.bindAll(this, 'hashChanged');
+    },
+
+    go: function(url, title) {
+      //window.location.hash = "#!"+url;
+      window.history.pushState({}, title || window.document.title, url);
+    },
+
+    hashChanged: function(e) {
+      var hash = this.hash();
+      for(var i = 0; i < this.routes.length; i++) {
+        var route = this.routes[i];
+
+        this.testRoute(hash, route);
+      }
+    },
+
+    testRoute: function(hash, route) {
+      var matches;
+      if(matches = route.matcher.regexp.exec(hash)) {
+        if(route.callback) {
+          route.callback.apply(this.scope, matches.slice(1, matches.length));
+        }
+
+        return true;
+      }
+
+      return false;
+    },
+
+    generateMatcher: function(route) {
+      var variableMatcher = "([A-Za-z0-9_\-]*)"
+          parts = route.split("/"),
+          matcher = [],
+          variables = 0
+
+      for(var i = 0; i < parts.length; i++) {
+        var part = parts[i];
+        if(/:.*/.test(part)) {
+          matcher.push(variableMatcher);
+          variables++;
+        } else {
+          matcher.push(part);
+        }
+      }
+
+      return {
+        variables: variables,
+        regexp: new RegExp(matcher.join("/"))
+      }
+    },
+
+    hash: function() {
+      //var cleanSplit = window.location.hash.split("#!")[1];
+      var path = window.location.pathname;
+      if(path === undefined) return '';
+      else return path;
+    },
+
+    /* Route is another function for 'on' which scopes automatically */
+    route: function(route, callback) {
+      var route = {
+        matcher: this.generateMatcher(route),
+        callback: callback
+      };
+      this.routes.push(route);
+
+      this.testRoute(this.hash(), route);
+    },
+
+    disable: function() {
+      // Remove event listener
+      //$(window).off('hashchange', this.boundHashChanged);
+      $(window).off('popstate', this.boundHashChanged);
+    },
+
+    enable: function() {
+      // Bind on hash change event on window to get notified once a hash has changed
+      //$(window).on('hashchange', this.boundHashChanged);
+      $(window).on('popstate', this.boundHashChanged);
+    },
+
+    // Disables and removed all events
+    removeAllRoutes: function() {
+      this.disable();
+      this.routes = [];
+    },
+  });
+
   /*
    * Views
    */
@@ -406,6 +542,9 @@ $(function() {
 
     // Add a subview to the current view. Takes care of drawing the view.
     addSubview: function(subview, options) {
+      // Notify view it will be moved to a superview
+      subview.willMoveToSuperview(this);
+
       // Add the subview to this view
       this.subviews.push(subview);
 
@@ -429,7 +568,7 @@ $(function() {
         var subview = this.subviews[idx];
         delete this.subviews[idx];
 
-        subview.wasRemovedFromSuperView();
+        subview._wasRemovedFromSuperView();
       }
     },
 
@@ -455,6 +594,11 @@ $(function() {
 
     // Remove DOM event.
     off: function(event, cb) {
+      // If called without arguments
+      if(event === undefined) {
+        this.$.off(); return;
+      }
+
       // Try and split events such as 'click #selector' and perform any find queries necessary.
       var eventSelector = splitEventSelector(event);
       var callback = _.bind(cb, this);
@@ -466,10 +610,17 @@ $(function() {
     },
 
     // Function will be called when the view has been removed from the super view.
-    wasRemovedFromSuperView: function() {
+    _wasRemovedFromSuperView: function() {
       // Remove from DOM
       this.$.remove();
+      // Unbind all event handlers
+      this.off();
+
+      // Call user defined unbinding handler
+      if(this.wasRemovedFromSuperView!== undefined) this.wasRemovedFromSuperView();
     },
+
+    willMoveToSuperview: function(){},
 
     // Basic draw method. Should be overwritten for custom drawing
     draw: function() {},
@@ -608,6 +759,14 @@ $(function() {
     // Will be called before any view loading is done.
     viewWillLoad: function(){},
   });
+  Object.defineProperty(ViewController.prototype, 'router', {
+    enumerable: true,
+    get: function() {
+      if(this._router === undefined) this._router = new Router();
+
+      return this._router;
+    },
+  });
 
 
   /*
@@ -695,7 +854,9 @@ $(function() {
 
   // Objects
   Frame.BasicObject = BasicObject;
+  Frame.NotificationCenter = NotificationCenter;
   Frame.Model = Model;
+  Frame.Router = Router;
   Frame.Collection = Collection;
 
   // Expose Frame's 'EventTarget' implementation

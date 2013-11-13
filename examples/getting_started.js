@@ -1,5 +1,6 @@
 $(function() {
   var DateViewController, DateView, DateModel;
+  var NotificationCenter = Frame.NotificationCenter
 
   // Create the date model with a 'date' property
   DateModel = Frame.Model.extend(['date']);
@@ -9,7 +10,7 @@ $(function() {
       'click' : 'onClick'
     },
     onClick: function() {
-      console.log('on click');
+      NotificationCenter.default.trigger('onclick:date', this.dateModel.date);
     },
 
     constructor: function() {
@@ -42,7 +43,21 @@ $(function() {
     },
   });
 
-  var RemoveMeView = Frame.View.extend({draw: function() {this.$.html('i should have been removed');}});
+  var RemoveMeView = Frame.View.extend({
+    element: 'input',
+    constructor: function() {
+      Frame.View.call(this);
+
+      this.$.on('keypress', function() {
+        console.log('keypress');
+      });
+    },
+
+    wasRemovedFromSuperView: function() {
+      console.log("Goodbye cruel world");
+    }
+  });
+
   var AttachingView = Frame.View.extend({
     events: {
       'mousemove' : 'draw',
@@ -74,6 +89,10 @@ $(function() {
 
     // Set up your view and load any content that needs to be displayed on the view.
     viewDidLoad: function() {
+      NotificationCenter.default.on('onclick:date', this, function(event, data) {
+        console.log(event, data);
+      });
+
       var template = 'Hello world <div id="attachable"></div>';
       this.view.$.html(template);
 
@@ -109,22 +128,27 @@ $(function() {
 
       var removeMeView = new RemoveMeView();
       this.view.addSubview(removeMeView);
-      removeMeView.removeFromSuperview();
+      //removeMeView.removeFromSuperview();
 
       var attachingView = new AttachingView({el: '#attachable'});
       this.view.addSubview(attachingView);
+
+      var cancelButton = new Frame.Button({text: "<- remove"});
+      var _this = this;
+      cancelButton.on('click', function() {
+        removeMeView.removeFromSuperview();
+
+        this.removeFromSuperview();
+
+        NotificationCenter.default.off('onclick:date', _this);
+      });
+      this.view.addSubview(cancelButton);
 
       var helloButton = new Frame.Button({text: "Hello, press me."});
       helloButton.on('click', function() {
         alert("Oh, hello there, sir");
       });
       this.view.addSubview(helloButton);
-
-      var cancelButton = new Frame.Button({text: "Don't press me."});
-      cancelButton.on('click', function() {
-        alert("I told you not to press me");
-      });
-      this.view.addSubview(cancelButton);
     }
   });
 

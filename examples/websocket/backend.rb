@@ -152,7 +152,7 @@ module Frame
           if(req.params['channels'] && req.params['channels'].is_a?(Array))
             req.params['channels'].each do |channel_name|
               channel = (@channels[channel_name.to_sym] ||= {})
-              channel[channel_name.to_sym] = socket
+              channel[socket_id] = socket
             end
           end
 
