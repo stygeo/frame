@@ -643,6 +643,8 @@ $(function() {
 
       if(!this.__collection) {
         this.__collection = $(element);
+        // Set the Frame view as 'data' attribute
+        this.__collection.data('view', this);
         // Add classes set this view cssClass attribute.
         this.__collection.addClass(this.cssClass);
       }
