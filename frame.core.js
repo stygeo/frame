@@ -914,7 +914,6 @@ $(function() {
       onReady();
     }
   }
-  1+1;
 
   function FrameBootstrapFramework(options) {
     // Bootstrap database (if any)
