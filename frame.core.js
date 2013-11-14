@@ -522,7 +522,7 @@ $(function() {
 
   var View = BasicObject.extend({
     subviews: [],
-    element: 'div',
+    tag: 'div',
 
     // Basic view contstructor
     constructor: function(options) {
@@ -533,6 +533,9 @@ $(function() {
 
       // Set the element of the controller
       this.el = options.el;
+      // set the tag of the controller (if specified)
+      if(options.tag) this.tag = options.tag;
+
       // Set the CSS classes
       this.cssClass = options.cssClass;
 
@@ -639,7 +642,7 @@ $(function() {
 
     get: function() {
       // Get the bound element or create a new element.
-      var element = this.el || '<'+this.element+'/>';
+      var element = this.el || '<'+this.tag+'/>';
 
       if(!this.__collection) {
         this.__collection = $(element);
@@ -658,7 +661,7 @@ $(function() {
    */
   var CanvasView = View.extend({
     // Create a canvas element if no element is given
-    element: 'canvas',
+    tag: 'canvas',
 
     constructor: function(options) {
       if(!options) options = {};
@@ -673,7 +676,7 @@ $(function() {
 
   // Generic button view
   var Button = View.extend({
-    element: 'button',
+    tag: 'button',
 
     constructor: function(options) {
       if(!options) options = {};
@@ -724,7 +727,7 @@ $(function() {
       this.viewWillLoad();
 
       // Create a new View and pass it the el (el may be undefined)
-      this.view = new View({el: this.el});
+      this.view = new View({el: this.el, tag: this.tag});
 
       // Loop through the events if specified
       if(this.events) {
