@@ -714,6 +714,7 @@ $(function() {
 
       this.el = options.el;
       this.viewControllers = [];
+
     },
 
     loadView: function() {
@@ -722,6 +723,17 @@ $(function() {
 
       // Create a new View and pass it the el (el may be undefined)
       this.view = new View({el: this.el});
+
+      // Loop through the events if specified
+      if(this.events) {
+        for(var key in this.events) {
+          if(this.events.hasOwnProperty(key)) {
+            // Bind the event to the view (including any sub-queries)
+            // this.events[key] returns a function 'pointer' (key)
+            this.on(key, this[this.events[key]]);
+          }
+        }
+      }
 
       // Notify the inherited controller that the view has been loaded and is ready.
       this.viewDidLoad();
@@ -763,6 +775,36 @@ $(function() {
     removeFromParentViewController: function() {
       if(this.parentViewController) {
         this.parentViewController.removeChildViewController(this);
+      }
+    },
+
+    // On DOM event. Uses basic jQuery event handling.
+    on: function(event, cb) {
+      // Try and split events such as 'click #selector' and perform any find queries necessary.
+      var eventSelector = splitEventSelector(event);
+      var callback = _.bind(cb, this);
+      if(eventSelector.selector) {
+        this.view.$.on(eventSelector.event, eventSelector.selector, callback);
+
+      } else {
+        this.view.$.on(eventSelector.event, callback);
+      }
+    },
+
+    // Remove DOM event.
+    off: function(event, cb) {
+      // If called without arguments
+      if(event === undefined) {
+        this.view.$.off(); return;
+      }
+
+      // Try and split events such as 'click #selector' and perform any find queries necessary.
+      var eventSelector = splitEventSelector(event);
+      var callback = _.bind(cb, this);
+      if(eventSelector.selector) {
+        this.view.$.find(eventSelector.selector).off(eventSelector.event, callback);
+      } else {
+        this.view.$.off(eventSelector.event, callback);
       }
     },
 
