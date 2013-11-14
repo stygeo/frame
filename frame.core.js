@@ -750,8 +750,13 @@ $(function() {
     removeChildViewController: function(controller) {
       var idx = this.viewControllers.indexOf(controller);
       if(idx != -1) {
-        delete this.viewControllers[idx];
-        controller.parentViewController = undefined;
+        // Remove the view from the superview
+        conttroller.view.removeFromSuperview();
+
+        controller.parentViewController = null;
+
+        // Remove the view controller
+        this.viewControllers.splice(idx, 1);
       }
     },
 
@@ -827,6 +832,11 @@ $(function() {
     // Same as clear
     reset: function(array) {return this.clear(array);},
 
+    each: function(callback, scope) {
+      for(var i = 0; i < this.length; i++) {
+        callback.call(scope || this, this[i], i);
+      }
+    }
   };
 
   var Collection = function(array) {
