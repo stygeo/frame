@@ -44,7 +44,7 @@ $(function() {
   });
 
   var RemoveMeView = Frame.View.extend({
-    element: 'input',
+    tag: 'input',
     constructor: function() {
       Frame.View.call(this);
 
