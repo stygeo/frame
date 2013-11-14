@@ -743,7 +743,7 @@ $(function() {
       controller.parentViewController = this;
 
       // Load the view of the child view controller
-      controller.loadView();
+      this.view.addSubview(controller.loadView());
     },
 
     // Remove a child view controller from the stack
