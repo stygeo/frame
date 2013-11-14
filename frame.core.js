@@ -714,7 +714,6 @@ $(function() {
 
       this.el = options.el;
       this.viewControllers = [];
-      this.parentViewController
     },
 
     loadView: function() {
@@ -910,8 +909,6 @@ $(function() {
 
         // Open database and call the onReady when ever it's done.
         store.open(db.name, onReady, db);
-      } else if(false) {
-
       }
     } else { /* If no database continue initializing */
       onReady();
