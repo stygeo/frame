@@ -1069,7 +1069,7 @@
 
       FrameBootstrapFramework({
         onReady: function() {
-          app.didFinishLaunching();
+          app.didFinishLaunching(Frame);
 
           // If a rootViewController is set call the conrollers loadView method
           if(app.rootViewController) {
