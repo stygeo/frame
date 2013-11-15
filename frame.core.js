@@ -636,6 +636,22 @@
       if(this.wasRemovedFromSuperView!== undefined) this.wasRemovedFromSuperView();
     },
 
+    // Replace the current content with the new content.
+    // Creates a new jQuery selector
+    replace: function(html) {
+      // The original element
+      var original = this.$;
+
+      // Create new jquery selector
+      this.__collection = $(html);
+
+      // Set the Frame view as 'data' attribute
+      this.__collection.data('view', this);
+
+      // Replace the original element with the new data
+      original.replaceWith(this.__collection);
+    },
+
     willMoveToSuperview: function(){},
 
     // Basic draw method. Should be overwritten for custom drawing
@@ -646,10 +662,10 @@
     enumerable: true,
 
     get: function() {
-      // Get the bound element or create a new element.
-      var element = this.el || '<'+this.tag+'/>';
-
       if(!this.__collection) {
+        // Get the bound element or create a new element.
+        var element = this.el || '<'+this.tag+'/>';
+
         this.__collection = $(element);
         // Set the Frame view as 'data' attribute
         this.__collection.data('view', this);
