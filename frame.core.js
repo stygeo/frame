@@ -636,22 +636,6 @@
       if(this.wasRemovedFromSuperView!== undefined) this.wasRemovedFromSuperView();
     },
 
-    // Replace the current content with the new content.
-    // Creates a new jQuery selector
-    replace: function(html) {
-      // The original element
-      var original = this.$;
-
-      // Create new jquery selector
-      this.__collection = $(html);
-
-      // Set the Frame view as 'data' attribute
-      this.__collection.data('view', this);
-
-      // Replace the original element with the new data
-      original.replaceWith(this.__collection);
-    },
-
     willMoveToSuperview: function(){},
 
     // Basic draw method. Should be overwritten for custom drawing
@@ -674,8 +658,56 @@
       }
 
       return this.__collection;
+    },
+
+    // Replace the current content with the new content.
+    // Creates a new jQuery selector
+    set: function(html) {
+      // The original element
+      var original = this.$;
+
+      // Create new jquery selector
+      this.__collection = $(html);
+
+      // Set the Frame view as 'data' attribute
+      this.__collection.data('view', this);
+
+      // Replace the original element with the new data
+      original.replaceWith(this.__collection);
     }
   });
+
+
+  /*
+   * DataView
+   *
+   * Data view taking care of rendering a template with the model provided
+   */
+  var DataView = View.extend({
+    constructor: function(model, options) {
+      options = options || {};
+
+      Frame.View.call(this, options);
+
+      this.model = model;
+      this.model.on('change', function() {
+        this.draw();
+      });
+    },
+
+    data: function() {
+      if(this.model) {
+        return this.model.toJSON();
+      }
+    },
+
+    draw: function() {
+      var html = Frame.renderEngine.render(this.template, this.data());
+
+      this.$ = html;
+    },
+  });
+
 
   /*
    * Canvas view.
@@ -924,6 +956,24 @@
   _.extend(Collection.prototype, EventTarget);
 
 
+  /*
+   * Render engines
+   */
+  var RenderEngine = BasicObject.extend({
+    render: function(template, data){},
+    update: function(template, data){},
+  });
+
+  var EJSRenderEngine = RenderEngine.extend({
+    render: function(template, data) {
+      return new EJS({url: template + ".ejs"}).render(data);
+    },
+
+    update: function() {
+    }
+  });
+
+
   // Frame collection helper
   var Frame = function(a) {
     if(!(a instanceof Array)) {
@@ -949,6 +999,7 @@
 
   // Views
   Frame.View = View;
+  Frame.DataView = DataView;
   Frame.CanvasView = CanvasView;
   Frame.Button = Button;
   // Controllers
@@ -956,6 +1007,10 @@
 
   Frame.DataStore = DataStore;
   Frame.defaultStore = undefined;
+
+  Frame.RenderEngine = RenderEngine;
+  Frame.EJSRenderEngine = EJSRenderEngine;
+  Frame.renderEngine = undefined;
 
   Frame.Application = Application;
 
