@@ -291,6 +291,19 @@
         this.valueForKey(serializableAttributes[key], key);
       }
     },
+
+    // Copies the attributes of the model to a new object.
+    toJSON: function() {
+      var attributes = {};
+
+      for(var k in this.properties()) {
+        if(this.properties().hasOwnProperty(k)) {
+          attributes[k] = this.valueForKey(k);
+        }
+      }
+
+      return attributes;
+    },
   });
   _.extend(BasicObject, EventTarget);
   _.extend(BasicObject.prototype, EventTarget);
@@ -350,18 +363,6 @@
     },
 
 
-    // Copies the attributes of the model to a new object.
-    toJSON: function() {
-      var attributes = {};
-
-      for(var k in this.properties()) {
-        if(this.properties().hasOwnProperty(k)) {
-          attributes[k] = this.valueForKey(k);
-        }
-      }
-
-      return attributes;
-    },
 
     // Sync the object with the server. (Only used by SocketStore)
     sync: function(options) {
