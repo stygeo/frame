@@ -114,6 +114,36 @@ $(function() {
       var collection;
       beforeEach(function() {
         collection = new Frame.Collection();
+        collection.callback = function(){};
+        spyOn(collection, 'callback');
+
+      });
+
+      it('should behave as an array', function() {
+        expect(collection instanceof Array).toBe(true);
+      });
+
+      it('should fire a change event when objects are added', function() {
+        collection.on('change', collection.callback);
+        collection.push(1);
+
+        expect(collection.callback).toHaveBeenCalled();
+      });
+
+      it('should clear the collection of its content when reset is called', function(){
+        var collection = new Frame.Collection(1,2,3);
+
+        collection.reset();
+
+        expect(collection.length).toEqual(0);
+      });
+
+      it('should call a callback for each element using "each"', function() {
+        collection.reset([1,2,3]);
+
+        collection.each(collection.callback);
+
+        expect(collection.callback.calls.count()).toEqual(3);
       });
 
       describe("initialization", function() {
