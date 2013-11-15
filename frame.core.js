@@ -42,9 +42,9 @@ $(function() {
     return GID;
   }
 
-  var pushState = window.history.pushState;
+  window.history.originalPushState = window.history.pushState;
   window.history.pushState = function(state) {
-    var r = pushState.apply(window.history, arguments);
+    var r = window.history.originalPushState.apply(window.history, arguments);
 
     $(window).trigger('pushstate', state);
 
@@ -397,7 +397,7 @@ $(function() {
   createDefaultInstanceMethodOn(NotificationCenter);
 
   /*
-   * Hash handler
+   * Routing handler
    */
   var Router = BasicObject.extend({
     constructor: function(scope) {
@@ -412,12 +412,9 @@ $(function() {
       this.boundPopstate = _.bind(this.popstate, this);
 
       this.enable();
-
-      //_.bindAll(this, 'hashChanged');
     },
 
     go: function(url, title) {
-      //window.location.hash = "#!"+url;
       window.history.pushState(null, title || window.document.title, url);
     },
 
@@ -433,7 +430,7 @@ $(function() {
     testRoute: function(hash, route) {
       var matches;
       if(matches = route.matcher.regexp.exec(hash)) {
-        if(route.callback) {
+        if(route.callback && this.enabled) {
           route.callback.apply(this.scope, matches.slice(1, matches.length));
         }
 
@@ -465,8 +462,12 @@ $(function() {
       }
     },
 
+    getPathName: function() {
+      return window.location.pathname;
+    },
+
     hash: function() {
-      var path = window.location.pathname;
+      var path = this.getPathName();
       if(path === undefined) return '';
       else return path;
     },
@@ -483,12 +484,15 @@ $(function() {
     },
 
     disable: function() {
+      this.enabled = false;
+
       // Remove event listener
       $(window).off('popstate', this.boundPopstate);
       $(window).off('pushstate', this.boundPopstate);
     },
 
     enable: function() {
+      this.enabled = true;
       // Bind on hash change event on window to get notified once a hash has changed
       $(window).on('popstate', this.boundPopstate);
       $(window).on('pushstate', this.boundPopstate);
