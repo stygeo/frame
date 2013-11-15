@@ -1,67 +1,64 @@
 $(function() {
-  describe("Frame", function() {
+  describe("Frame.core", function() {
     var Book = Frame.BasicObject.extend({});
 
     describe("EventTarget", function() {
-      it("should be able to extend to any given object", function() {
-        var Eventer = function(){};
-        _.extend(Eventer.prototype, Frame.EventTarget);
+      var Eventer = function(){};
+      _.extend(Eventer.prototype, Frame.EventTarget);
+      var cb1 = function(){},
+          eventer;
 
+      beforeEach(function(){ eventer = new Eventer(); });
+
+      it("should be able to extend to any given object", function() {
         expect(Eventer.prototype.on).not.toBeNull();
         expect(Eventer.prototype.off).not.toBeNull();
       });
 
-      describe("removing and adding event listeners", function() {
-        var Eventer = function(){};
-        _.extend(Eventer.prototype, Frame.EventTarget);
-        var cb1 = function(){};
-        var eventer;
-        beforeEach(function(){ eventer = new Eventer(); });
 
-        it("removing all 'test' events should empty it", function() {
-          eventer.on('test', cb1);
-          eventer.off('test');
+      it("should remove all 'test' events when off is called", function() {
+        eventer.on('test', cb1);
+        eventer.off('test');
 
-          expect(eventer.events('test').length).toEqual(0);
-        });
+        expect(eventer.events('test').length).toEqual(0);
+      });
 
-        it("Adding 2 callbacks to event 'test' should set the length to 2", function() {
-          eventer.on('test', cb1);
-          eventer.on('test', function() { return 2; });
+      it("should set the length to 2 when 2 callbacks to event 'test' are added", function() {
+        eventer.on('test', cb1);
+        eventer.on('test', function() { return 2; });
 
-          expect(eventer.events('test').length).toEqual(2);
-        });
+        expect(eventer.events('test').length).toEqual(2);
+      });
 
-        it("Removing an unknown callback from the 'test' events should leave it as it is", function() {
-          eventer.on('test', cb1);
-          eventer.off('test', function() { return 1; });
+      it("should leave the 'test' event as it is when an unknown callback is removed", function() {
+        eventer.on('test', cb1);
+        eventer.off('test', function() { return 1; });
 
-          expect(eventer.events('test').length).toEqual(1);
-        });
+        expect(eventer.events('test').length).toEqual(1);
+      });
 
 
-        it("Removing a known callback form the 'test' events reduce it by 1", function() {
-          eventer.on('test', cb1);
-          var length = eventer.events('test').length;
+      it("should reduce the event listeners of event 'test' by 1 when a known callback is removed", function() {
+        eventer.on('test', cb1);
+        var length = eventer.events('test').length;
 
-          eventer.off('test', cb1);
+        eventer.off('test', cb1);
 
-          expect(eventer.events('test').length).toEqual(length - 1);
-        });
+        expect(eventer.events('test').length).toEqual(length - 1);
+      });
 
-        it("Remove a known observer from the 'foobar' events should set the length to 0", function() {
-          var observer = {
-            foo: function(event) { console.log("Foo", event); },
-            bar: function(event) { console.log("Bar", event); }
-          };
+      it("should set the amount event listeners of event 'foobar' to 0 when specific observer is removed", function() {
+        var observer = {
+          foo: function(event) { console.log("Foo", event); },
+          bar: function(event) { console.log("Bar", event); }
+        };
 
-          eventer.on('foobar', observer.foo, observer);
-          eventer.on('foobar', observer.bar, observer);
+        eventer.on('foobar', observer.foo, observer);
+        eventer.on('foobar', observer.bar, observer);
 
-          eventer.off(observer, {all: true});
+        eventer.off(observer, {all: true});
 
-          expect(eventer.events('foobar').length).toEqual(0);
-        });
+        expect(eventer.events('foobar').length).toEqual(0);
       });
     });
 
@@ -273,5 +270,8 @@ $(function() {
         expect(router.callback).not.toHaveBeenCalled();
       });
     });
+  });
+
+  describe("Frame.rest", function() {
   });
 });

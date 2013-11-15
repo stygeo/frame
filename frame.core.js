@@ -1,4 +1,4 @@
-$(function() {
+(function(window) {
   var __version = '0.1';
 
   // Helper methods
@@ -1022,6 +1022,6 @@ $(function() {
 
   // Register AMD module.
   if(typeof define === "function" && define.amd) {
-    define("frame", [], function() { return Frame; });
+    define("frame.core", [], function() { return Frame; });
   }
-});
+})(window);
