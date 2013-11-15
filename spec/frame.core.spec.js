@@ -100,7 +100,7 @@ $(function() {
           expect(book.callback.calls.count()).toEqual(1);
         });
 
-        it("should fire the 'change' event when a title changed", function() {
+        it("should fire the 'change' event everytime an attribute changes", function() {
           book.on('title:change',  book.callback);
           book.title = 'Some title';
           book.title = 'Other title';
