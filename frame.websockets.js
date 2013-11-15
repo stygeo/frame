@@ -1,4 +1,4 @@
-$(function() {
+(function(window) {
   if(!('Frame' in window)) { throw new Error("Included frame.websockets but Frame is undefined"); }
 
   var Channel = undefined;
@@ -211,11 +211,11 @@ $(function() {
   });
   _.extend(Channel.prototype, Frame.EventTarget);
 
+  Socket.Channel = Channel;
   Frame.Socket = Socket;
-  Frame.Socket.Channel = Channel;
 
   // Register AMD module.
   if(typeof define === "function" && define.amd) {
-    define("frame.websockets", [], function() { return Frame; });
+    define("frame.websockets", [], function() { return Socket; });
   }
 });

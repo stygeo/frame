@@ -1,4 +1,4 @@
-$(function() {
+(function(window) {
   if(!('Frame' in window)) { throw new Error("Included frame.rest but Frame is undefined"); }
 
   var RestStore = Frame.DataStore.extend({
@@ -171,6 +171,6 @@ $(function() {
 
   // Register AMD module.
   if(typeof define === "function" && define.amd) {
-    define("frame.rest", [], function() { return Frame; });
+    define("frame.rest", [], function() { return RestStore; });
   }
-});
+})(window);

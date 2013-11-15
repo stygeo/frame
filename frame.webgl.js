@@ -1,4 +1,4 @@
-$(function() {
+(function(window) {
   if(!('Frame' in window)) { throw new Error("Included frame.glkit but Frame is undefined"); }
 
   var requestAnimationFrame = (function(callback) {
@@ -88,6 +88,6 @@ $(function() {
 
   // Register AMD module.
   if(typeof define === "function" && define.amd) {
-    define("frame.webgl", [], function() { return Frame; });
+    define("frame.webgl", [], function() { return {WebGLView: WebGLView, WebGLViewController: WebGLViewController}; });
   }
-});
+})(window);

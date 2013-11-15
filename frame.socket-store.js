@@ -1,4 +1,4 @@
-$(function() {
+(function(window) {
   if(!('Frame' in window)) { throw new Error("Included frame.socket-store but Frame is undefined"); }
 
   var SocketStore = Frame.DataStore.extend(
@@ -86,4 +86,9 @@ $(function() {
   _.extend(SocketStore.prototype, Frame.EventTarget);
 
   Frame.SocketStore = SocketStore;
-});
+
+  // Register AMD module.
+  if(typeof define === "function" && define.amd) {
+    define("frame.socket-store", [], function() { return SocketStore; });
+  }
+})(window);
