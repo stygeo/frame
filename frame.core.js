@@ -251,7 +251,7 @@
     },
 
     // Specialized setter. Calls callbacks on observed values
-    setProperty: function(key, value) {
+    setProperty: function(key, value, options) {
       var isNew = !this.properties()[key];
 
       this.properties()[key] = value
@@ -259,6 +259,8 @@
       if(isNew) { this.trigger("" + key + ":new"); }
 
       this.trigger("" + key + ":change");
+
+      if(!options || (options && !options.noChangeTrigger)) { this.trigger('change'); }
     },
 
     // Basic object getter
@@ -267,12 +269,12 @@
     },
 
     // Returns the given or sets the given key with value (Key Value Coding, KVC)
-    valueForKey: function(value_or_key, key) {
+    valueForKey: function(value_or_key, key, options) {
       if(key === undefined) {
         return this.getProperty(value_or_key)
+      } else {
+        this.setProperty(key, value_or_key, options)
       }
-
-      this.setProperty(key, value_or_key)
     },
 
     // Serialization of attributes
@@ -288,8 +290,10 @@
         }
 
         // Assign the attributes value
-        this.valueForKey(serializableAttributes[key], key);
+        this.valueForKey(serializableAttributes[key], key, {noChangeTrigger: true});
       }
+
+      if(serializableAttributes) { this.trigger('change'); }
     },
 
     // Copies the attributes of the model to a new object.
@@ -692,7 +696,7 @@
       this.model = model;
       this.model.on('change', function() {
         this.draw();
-      });
+      }, this);
     },
 
     data: function() {
