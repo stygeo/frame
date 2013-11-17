@@ -260,7 +260,7 @@
 
       this.trigger("" + key + ":change");
 
-      if(!options || (options && !options.noChangeTrigger)) { this.trigger('change'); }
+      if(!options || (options && !options.noChangeTrigger)) { this.trigger('change', new Collection(key)); }
     },
 
     // Basic object getter
@@ -293,7 +293,7 @@
         this.valueForKey(serializableAttributes[key], key, {noChangeTrigger: true});
       }
 
-      if(serializableAttributes) { this.trigger('change'); }
+      if(serializableAttributes) { this.trigger('change', new Collection(__keys(serializableAttributes))); }
     },
 
     // Copies the attributes of the model to a new object.
@@ -332,6 +332,61 @@
       }
     }
   }
+
+  /*
+   * Collection
+   */
+  var __emptyArray = [];
+  var CollectionPrototype = {
+    forEach: __emptyArray.forEach,
+
+    push: function(object) {
+      __emptyArray.push.call(this, object);
+
+      this.trigger('change', object);
+    },
+
+    clear: function(arrayOrUndefined) {
+      this.length = 0;
+
+      if(arrayOrUndefined !== undefined) {
+        // We do not want to trigger a callback for each element
+        // added if it's being observed.
+        for(var i = 0; i < arrayOrUndefined.length; i++) {
+          __emptyArray.push.call(this, arrayOrUndefined[i]);
+        }
+
+        this.trigger('reset', this);
+      }
+
+      return this;
+    },
+
+    // Same as clear
+    reset: function(array) {return this.clear(array);},
+
+    each: function(callback, scope) {
+      for(var i = 0; i < this.length; i++) {
+        callback.call(scope || this, this[i], i);
+      }
+    }
+  };
+
+  var Collection = function(array) {
+    var a;
+    if(array instanceof Array) {
+      a = array;
+    } else {
+      // Splat argument array
+      a = Array.prototype.slice.call(arguments, 0);
+    }
+
+    if(a.length > 0) __emptyArray.push.apply(this, a);
+  }
+  Collection.prototype = new Array();
+  _.extend(Collection.prototype, CollectionPrototype);
+  _.extend(Collection.prototype, BasicObject.prototype);
+  _.extend(Collection.prototype, EventTarget);
 
   /*
    * Frame.Model data object.
@@ -686,6 +741,12 @@
    * DataView
    *
    * Data view taking care of rendering a template with the model provided
+   *
+   * It assumes the following things:
+   * - a render engine is set
+   * - a model is passed
+   * - templates have their respective data-attributes set (these reflect the attributes in the model)
+   * Whenever a attribute on the model changes the view automatically updates the corresponding element(s)
    */
   var DataView = View.extend({
     constructor: function(model, options) {
@@ -694,8 +755,10 @@
       Frame.View.call(this, options);
 
       this.model = model;
-      this.model.on('change', function() {
-        this.draw();
+      // Bind to change event so we can update the view
+      this.model.on('change', function(ev, attributes) {
+        // Call update with the change attributes
+        this.update(attributes);
       }, this);
     },
 
@@ -706,10 +769,19 @@
     },
 
     draw: function() {
+      // Use the render engine to render the view
       var html = Frame.renderEngine.render(this.template, this.data());
-
+      // Reset the jQuery selector
       this.$ = html;
     },
+
+    update: function(attributes) {
+      // Loop thru each attribute and update the appropriate element by using the data-attribute
+      attributes.each(function(attribute) {
+        // Update the corresponding element
+        this.$.find("[data-attribute='"+attribute+"']").text( this.model.valueForKey(attribute) );
+      }, this);
+    }
   });
 
 
@@ -906,58 +978,6 @@
     willTerminate: function(){}
   });
 
-  // Experimental collection
-  var __emptyArray = [];
-  var CollectionPrototype = {
-    forEach: __emptyArray.forEach,
-
-    push: function(object) {
-      __emptyArray.push.call(this, object);
-
-      this.trigger('change', object);
-    },
-
-    clear: function(arrayOrUndefined) {
-      this.length = 0;
-
-      if(arrayOrUndefined !== undefined) {
-        // We do not want to trigger a callback for each element
-        // added if it's being observed.
-        for(var i = 0; i < arrayOrUndefined.length; i++) {
-          __emptyArray.push.call(this, arrayOrUndefined[i]);
-        }
-
-        this.trigger('reset', this);
-      }
-
-      return this;
-    },
-
-    // Same as clear
-    reset: function(array) {return this.clear(array);},
-
-    each: function(callback, scope) {
-      for(var i = 0; i < this.length; i++) {
-        callback.call(scope || this, this[i], i);
-      }
-    }
-  };
-
-  var Collection = function(array) {
-    var a;
-    if(array instanceof Array) {
-      a = array;
-    } else {
-      // Splat argument array
-      a = Array.prototype.slice.call(arguments, 0);
-    }
-
-    if(a.length > 0) __emptyArray.push.apply(this, a);
-  }
-  Collection.prototype = new Array();
-  _.extend(Collection.prototype, CollectionPrototype);
-  _.extend(Collection.prototype, BasicObject.prototype);
-  _.extend(Collection.prototype, EventTarget);
 
 
   /*
