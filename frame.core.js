@@ -79,7 +79,7 @@
     var parent = this;
     var child, properties;
     if(propertiesOrProtoProps instanceof Array) {
-      properties = properties;
+      properties = propertiesOrProtoProps;
     } else {
       protoProps = propertiesOrProtoProps;
     }
@@ -394,11 +394,38 @@
   // The basic model. Inherit from this object.
   var Model = BasicObject.extend({
     constructor: function(attributes, options) {
+      // Dirty attributes are attributes which have been changed and haven't been persisted.
+      this.dirtyAttributes = [];
+
       // Call the basic object's constructor.
       BasicObject.call(this, attributes);
 
       // Define this as a new model.
       this.isNew = true;
+
+      // Flag all attributes as dirty when a new instance has been created
+      if(attributes) {
+        this.setDirtyAttributes( _.keys(attributes) );
+      }
+    },
+
+    // Overwrite setProperty so we may flag it as dirty
+    setProperty: function(key, value, options) {
+      // Call super
+      Model.__super__.setProperty.call(this, key, value, options);
+
+      // Flag the attribute as dirty
+      this.setDirtyAttributes(key);
+    },
+
+    setDirtyAttributes: function(attributes) {
+      if(attributes instanceof Array) {
+        this.dirtyAttributes = this.dirtyAttributes.concat(attributes);
+      } else {
+        this.dirtyAttributes.push(attributes);
+      }
+
+      this.dirtyAttributes = _.uniq(this.dirtyAttributes);
     },
 
     fetch: function(parameters, options) {
@@ -415,13 +442,14 @@
       } else {
         Frame.defaultStore.update(this, options);
       }
+
+      // Reset dirty attributes
+      this.dirtyAttributes = [];
     },
 
     destroy: function(options) {
       Frame.defaultStore.destroy(this, options);
     },
-
-
 
     // Sync the object with the server. (Only used by SocketStore)
     sync: function(options) {
