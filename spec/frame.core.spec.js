@@ -158,6 +158,32 @@ $(function() {
       });
     });
 
+    describe("Model", function() {
+      var Book = Frame.Model.extend(['title']);
+      var book;
+
+      beforeEach(function(){
+        book = new Book();
+      });
+
+      it("should flag attributes as dirty when assagigned", function() {
+        book.title = 'Lord';
+        expect(book.dirtyAttributes.indexOf('title') !== -1).toBe(true);
+      });
+
+      it('should reset the dirty attributes once persisted', function() {
+        // Stub default store
+        Frame.defaultStore = {add:function(){},update:function(){}};
+
+        book.title = "Lord";
+        expect(book.dirtyAttributes.indexOf('title') !== -1).toBe(true);
+        book.save();
+
+        expect(book.dirtyAttributes).toEqual([]);
+
+      });
+    });
+
     describe("Routing", function() {
       var router,
       // Frame has it's own push state handler, calling the originalPushState eventually.
