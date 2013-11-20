@@ -164,12 +164,15 @@
     },
     off: function(event, callback) {
       if(callback === undefined) {
-        this.events(event).length = 0;
+        this.getEvent(event).length = 0;
       } else if(typeof callback === 'function') {
-        for(var i = 0; i < this.events(event).length; i++) {
-          var v = this.events(event)[i];
+        var events = this.getEvent(event);
+        console.log(events);
+
+        for(var i = 0; i < events.length; i++) {
+          var v = events[i];
           if(v.callback === callback) {
-            this.events(event).splice(i, 1);
+            events.splice(i, 1);
             break;
           }
         }

@@ -58,7 +58,7 @@ $(function() {
 
         eventer.off(observer, {all: true});
 
-        expect(eventer.events('foobar').length).toEqual(0);
+        expect(eventer.getEvent('foobar').length).toEqual(0);
       });
     });
 
