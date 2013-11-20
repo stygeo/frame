@@ -20,31 +20,31 @@ $(function() {
         eventer.on('test', cb1);
         eventer.off('test');
 
-        expect(eventer.events('test').length).toEqual(0);
+        expect(eventer.getEvent('test').length).toEqual(0);
       });
 
       it("should set the length to 2 when 2 callbacks to event 'test' are added", function() {
         eventer.on('test', cb1);
         eventer.on('test', function() { return 2; });
 
-        expect(eventer.events('test').length).toEqual(2);
+        expect(eventer.getEvent('test').length).toEqual(2);
       });
 
       it("should leave the 'test' event as it is when an unknown callback is removed", function() {
         eventer.on('test', cb1);
         eventer.off('test', function() { return 1; });
 
-        expect(eventer.events('test').length).toEqual(1);
+        expect(eventer.getEvent('test').length).toEqual(1);
       });
 
 
       it("should reduce the event listeners of event 'test' by 1 when a known callback is removed", function() {
         eventer.on('test', cb1);
-        var length = eventer.events('test').length;
+        var length = eventer.getEvent('test').length;
 
         eventer.off('test', cb1);
 
-        expect(eventer.events('test').length).toEqual(length - 1);
+        expect(eventer.getEvent('test').length).toEqual(length - 1);
       });
 
       it("should set the amount event listeners of event 'foobar' to 0 when specific observer is removed", function() {
