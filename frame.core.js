@@ -42,6 +42,12 @@
     return GID;
   }
 
+  /*
+   * Push state
+   *
+   * Frame requires it's own push state function in order to call the proper callbacks
+   * and trigger a 'pushstate' event.
+   */
   window.history.originalPushState = window.history.pushState;
   window.history.pushState = function(state) {
     var r = window.history.originalPushState.apply(window.history, arguments);
@@ -129,7 +135,7 @@
 
   /* Basic event target */
   var EventTarget = {
-    events: function(event) {
+    getEvent: function(event) {
       if(this._events === undefined) this._events = {};
 
       // Return the event property or return the event list based on the argument
@@ -150,7 +156,7 @@
      */
     on: function(event, callback, scope) {
       // Push the callback to the event stack
-      var eventListeners = this.events(event);
+      var eventListeners = this.getEvent(event);
       eventListeners.push({callback: callback, scope: scope});
 
       // Return the collection so we may chain
@@ -221,7 +227,7 @@
       customEvent.customData = data;
 
       // Loop over each event-callback and invoke the callback (w/ optionally the scope)
-      var events = this.events(event);
+      var events = this.getEvent(event);
       for(var i = 0; i < events.length; i++) {
         var v = events[i]
 
@@ -293,7 +299,7 @@
         this.valueForKey(serializableAttributes[key], key, {noChangeTrigger: true});
       }
 
-      if(serializableAttributes) { this.trigger('change', new Collection(__keys(serializableAttributes))); }
+      if(serializableAttributes) { this.trigger('change', new Collection(_.keys(serializableAttributes))); }
     },
 
     // Copies the attributes of the model to a new object.
@@ -316,21 +322,22 @@
   BasicObject.property = function(propertyNames) {
     propertyNames = __makeArray(propertyNames);
 
-    for(var i = 0; i < propertyNames.length; i++) {
-      var propertyName = propertyNames[i];
+    var prototype = this.prototype;
 
-      if( !(propertyNames in this.prototype) ) {
-        Object.defineProperty(this.prototype, propertyName, {
+    propertyNames.forEach(function(propertyName) {
+      if( !(propertyName in prototype) ) {
+        Object.defineProperty(prototype, propertyName, {
           enumerable: true,
           get: function() {
             return this.getProperty(propertyName)
           },
           set: function(value) {
+            console.log('set', propertyName);
             this.setProperty(propertyName, value)
           }
         });
       }
-    }
+    });
   }
 
   /*
@@ -783,17 +790,15 @@
       Frame.View.call(this, options);
 
       this.model = model;
-      // Bind to change event so we can update the view
-      this.model.on('change', function(ev, attributes) {
-        // Call update with the change attributes
-        this.update(attributes);
-      }, this);
+    },
+
+    onchange: function(ev, attributes) {
+      // Call update with the change attributes
+      this.update(attributes);
     },
 
     data: function() {
-      if(this.model) {
-        return this.model.toJSON();
-      }
+      return this.model.toJSON();
     },
 
     draw: function() {
@@ -810,6 +815,21 @@
         this.$.find("[data-attribute='"+attribute+"']").text( this.model.valueForKey(attribute) );
       }, this);
     }
+  });
+  // Define the model attribute which automatically binds/unbinds
+  Object.defineProperty(DataView.prototype, 'model', {
+    enumerable: true,
+    set: function(model) {
+      if(this._model) {
+        this._model.off('change', this.onchange, this);
+      }
+
+      // Bind to change event so we can update the view
+      model.on('change', this.onchange, this);
+
+      this._model = model;
+    },
+    get: function() { return this._model; }
   });
 
 
@@ -876,7 +896,6 @@
 
       this.el = options.el;
       this.viewControllers = [];
-
     },
 
     loadView: function() {
