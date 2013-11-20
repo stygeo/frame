@@ -332,7 +332,6 @@
             return this.getProperty(propertyName)
           },
           set: function(value) {
-            console.log('set', propertyName);
             this.setProperty(propertyName, value)
           }
         });
