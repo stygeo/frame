@@ -259,7 +259,7 @@
       if(this._properties === undefined) {
         this._properties = {},
 
-        var _this;
+        var _this = this;
         // Assign the known properties to the object
         this.constructor.properties.forEach(function(property) {
           _this._properties[property] = undefined;
