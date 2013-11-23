@@ -821,6 +821,30 @@
       var html = Frame.renderEngine.render(this.template, this.data());
       // Reset the jQuery selector
       this.$ = html;
+
+      // keyup and change events trigger changes to the model that reflect the data attribute.
+      this.$.find("input[data-attribute]").on('keyup change', _.bind(function(event) {
+        // Sync the input to the model
+        this.sync(event.currentTarget);
+      }, this));
+    },
+
+    sync: function(el) {
+      el = $(el);
+
+      var attribute, value;
+
+      // Get the attribute of the element
+      attribute = el.data('attribute');
+      // Test if element is a 'checkbox'. Check boxes are threated differently
+      if(el.is(':checkbox')) {
+        value = el.is(':checked');
+      } else {
+        value = el.val();
+      }
+
+      // Set the model's attribute to the value of the input (element).
+      this.model[attribute] = value;
     },
 
     update: function(attributes) {
