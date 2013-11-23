@@ -3,10 +3,13 @@
 
   var RestStore = Frame.DataStore.extend({
     constructor: function(baseUrl, options) {
+      options || (options = {});
+
       Frame.DataStore.call(this);
 
       this.baseUrl = baseUrl;
       this.defaultKey = options.key || 'id';
+      this.requestDataType = options.requestDataType;
     },
 
     // Fetch given resource
@@ -129,6 +132,7 @@
     request: function(type, url, options) {
       $.ajax(url, {
         type: type,
+        dataType: this.requestDataType || 'json',
         data: options.data,
         success: function(data, textStatus, xhr) {
           if(options.success) options.success.call(this, data, textStatus, xhr);

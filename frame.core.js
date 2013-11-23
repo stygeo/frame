@@ -256,7 +256,17 @@
     },
 
     properties: function() {
-      return this._properties || (this._properties = {})
+      if(this._properties === undefined) {
+        this._properties = {},
+
+        var _this;
+        // Assign the known properties to the object
+        this.constructor.properties.forEach(function(property) {
+          _this._properties[property] = undefined;
+        });
+      }
+
+      return this._properties;
     },
 
     // Specialized setter. Calls callbacks on observed values
@@ -324,6 +334,9 @@
   // Public property setter. Creates specialized properties which can be accessed through KVC and make use of KVO
   BasicObject.property = function(propertyNames) {
     propertyNames = __makeArray(propertyNames);
+
+    // Assign the known attributes to Object so we can reference it when creating a new 'properties' Object within the instance of the object.
+    this.properties = _.uniq( (this.properties || (this.properties = [])).concat( propertyNames ) );
 
     var prototype = this.prototype;
 
@@ -830,6 +843,9 @@
       model.on('change', this.onchange, this);
 
       this._model = model;
+
+      // Draw if a new model is set
+      this.draw();
     },
     get: function() { return this._model; }
   });
