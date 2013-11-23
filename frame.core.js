@@ -257,7 +257,7 @@
 
     properties: function() {
       if(this._properties === undefined) {
-        this._properties = {},
+        this._properties = {};
 
         var _this = this;
         // Assign the known properties to the object
