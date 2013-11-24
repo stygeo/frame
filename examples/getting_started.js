@@ -100,33 +100,6 @@ $(function() {
       var dateView = new DateView();
       this.view.addSubview(dateView);
 
-      var canvasView = new Frame.CanvasView({width: 300, height: 300});
-      // Hack, supply custom draw method
-      canvasView.draw = function() {
-        var ctx = this.context;
-
-        ctx.fillStyle = "#00A308";
-        ctx.beginPath();
-        ctx.arc(220, 220, 50, 0, Math.PI*2, true);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "#FF1C0A";
-        ctx.beginPath();
-        ctx.arc(100, 100, 100, 0, Math.PI*2, true);
-        ctx.closePath();
-        ctx.fill();
-
-        //the rectangle is half transparent
-        ctx.fillStyle = "rgba(255, 255, 0, .5)"
-        ctx.beginPath();
-        ctx.rect(15, 150, 120, 120);
-        ctx.closePath();
-        ctx.fill();
-      };
-
-      this.view.addSubview(canvasView);
-
       var removeMeView = new RemoveMeView();
       this.view.addSubview(removeMeView);
       //removeMeView.removeFromSuperview();

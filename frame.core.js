@@ -873,25 +873,6 @@
     get: function() { return this._model; }
   });
 
-
-  /*
-   * Canvas view.
-   */
-  var CanvasView = View.extend({
-    // Create a canvas element if no element is given
-    tag: 'canvas',
-
-    constructor: function(options) {
-      if(!options) options = {};
-
-      // Call the super view's constructor
-      View.call(this, options);
-
-      this.$.attr({width: options.width, height: options.height});
-      this.context = this.$[0].getContext('2d');
-    }
-  });
-
   // Generic button view
   var Button = View.extend({
     tag: 'button',
