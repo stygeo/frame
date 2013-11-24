@@ -167,7 +167,6 @@
         this.getEvent(event).length = 0;
       } else if(typeof callback === 'function') {
         var events = this.getEvent(event);
-        console.log(events);
 
         for(var i = 0; i < events.length; i++) {
           var v = events[i];
