@@ -1,4 +1,5 @@
 (function(window) {
+
   var __version = '0.1';
 
   // Helper methods
